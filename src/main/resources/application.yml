@@ -1,0 +1,13 @@
+spring.application.name=zeeshop-server
+
+server.port=8083
+
+spring.datasource.url=${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/zeeshop}
+spring.datasource.username=${JDBC_DATABASE_USERNAME:postgres}
+spring.datasource.password=${JDBC_DATABASE_PASSWORD:postgres}
+spring.datasource.driver-class-name=${JDBC_DATABASE_DRIVER:org.postgresql.Driver}
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
