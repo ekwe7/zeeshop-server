@@ -46,6 +46,20 @@ cors:
   allowed-headers: "*"
   max-age: 3600
 
+security:
+  jwt:
+    # Dev-only default. MUST be overridden via JWT_SECRET in every non-local environment.
+    secret: ${JWT_SECRET:dev-only-secret-do-not-use-in-production-1234567890abcdef}
+    access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:900000}       # 15 minutes
+    refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:604800000}  # 7 days
+
+admin:
+  seed:
+    username: ${ADMIN_USERNAME:admin}
+    email: ${ADMIN_EMAIL:admin@zeeshop.com}
+    # Dev-only default. MUST be overridden via ADMIN_PASSWORD in every non-local environment.
+    password: ${ADMIN_PASSWORD:ChangeMe123!}
+
 logging:
   level:
     com.ekwe_hub.zeeshopserver: ${LOG_LEVEL:INFO}

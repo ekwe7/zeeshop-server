@@ -5,6 +5,9 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -25,7 +28,10 @@ import java.util.Map;
  *   4. DuplicateResourceException       — unique constraint violated → 409
  *   5. BusinessRuleViolationException   — domain rule broken → 422
  *   6. MethodArgumentTypeMismatchException — wrong type for a path/query param → 400
- *   7. Exception (catch-all)            — anything unexpected → 500, logged at ERROR level
+ *   7. BadCredentialsException          — wrong login credentials → 401
+ *   8. AuthenticationException          — missing/invalid JWT on a protected endpoint → 401
+ *   9. AccessDeniedException            — authenticated but lacks the required authority → 403
+ *   10. Exception (catch-all)           — anything unexpected → 500, logged at ERROR level
  *
  * The catch-all deliberately hides the real error message from the client to avoid
  * leaking implementation details (table names, file paths, etc.). The full exception
@@ -77,6 +83,24 @@ public class GlobalExceptionHandler {
         String message = "Invalid value '%s' for parameter '%s'".formatted(ex.getValue(), ex.getName());
         return ResponseEntity.badRequest()
                 .body(ApiResponse.error(message));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Invalid username/email or password"));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationFailure(AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication is required to access this resource"));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("You do not have permission to perform this action"));
     }
 
     @ExceptionHandler(Exception.class)
