@@ -29,6 +29,7 @@ import java.util.Map;
  *
  * @param <T> the type of the payload inside "data"
  */
+
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)

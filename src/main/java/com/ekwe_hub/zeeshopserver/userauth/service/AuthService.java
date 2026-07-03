@@ -3,7 +3,7 @@ package com.ekwe_hub.zeeshopserver.userauth.service;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.infrastructure.security.JwtService;
 import com.ekwe_hub.zeeshopserver.shared.infrastructure.security.UserPrincipal;
-import com.ekwe_hub.zeeshopserver.userauth.dto.AuthResponse;
+import com.ekwe_hub.zeeshopserver.userauth.dto.response.AuthResponse;
 import com.ekwe_hub.zeeshopserver.userauth.entity.RefreshToken;
 import com.ekwe_hub.zeeshopserver.userauth.entity.User;
 import com.ekwe_hub.zeeshopserver.userauth.repository.RefreshTokenRepository;
@@ -90,6 +90,18 @@ public class AuthService {
                     token.setRevoked(true);
                     refreshTokenRepository.save(token);
                 });
+    }
+
+    /**
+     * Revokes every refresh token for the user behind the given refresh token, not just
+     * this one — for "log me out everywhere" (e.g. the account may be compromised).
+     */
+    @Transactional
+    public void logoutAll(String rawRefreshToken) {
+        RefreshToken storedToken = refreshTokenRepository.findByTokenHash(hash(rawRefreshToken))
+                .orElseThrow(() -> new BusinessRuleViolationException("Invalid refresh token"));
+
+        refreshTokenRepository.deleteByUserId(storedToken.getUser().getId());
     }
 
     private AuthResponse issueTokens(User user, UserPrincipal principal) {
