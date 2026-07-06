@@ -1,3 +1,9 @@
+app:
+  # Local dev is the only environment allowed to boot with the default JWT secret /
+  # admin password below — see StartupSecretsValidator. Every other deployment must
+  # set APP_ENV (e.g. staging, production) AND override JWT_SECRET / ADMIN_PASSWORD.
+  environment: ${APP_ENV:local}
+
 spring:
   application:
     name: zeeshop-server

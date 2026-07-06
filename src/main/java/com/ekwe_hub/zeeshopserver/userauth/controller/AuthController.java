@@ -37,4 +37,10 @@ public class AuthController {
         authService.logout(request.refreshToken());
         return ResponseEntity.ok(ApiResponse.success(null, "Logged out successfully"));
     }
+
+    @PostMapping("/logout-all")
+    public ResponseEntity<ApiResponse<Void>> logoutAll(@Valid @RequestBody TokenRequest request) {
+        authService.logoutAll(request.refreshToken());
+        return ResponseEntity.ok(ApiResponse.success(null, "Logged out of all sessions"));
+    }
 }

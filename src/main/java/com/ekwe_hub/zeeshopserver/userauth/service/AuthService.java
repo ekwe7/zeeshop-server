@@ -92,6 +92,18 @@ public class AuthService {
                 });
     }
 
+    /**
+     * Revokes every refresh token for the user behind the given refresh token, not just
+     * this one — for "log me out everywhere" (e.g. the account may be compromised).
+     */
+    @Transactional
+    public void logoutAll(String rawRefreshToken) {
+        RefreshToken storedToken = refreshTokenRepository.findByTokenHash(hash(rawRefreshToken))
+                .orElseThrow(() -> new BusinessRuleViolationException("Invalid refresh token"));
+
+        refreshTokenRepository.deleteByUserId(storedToken.getUser().getId());
+    }
+
     private AuthResponse issueTokens(User user, UserPrincipal principal) {
         String accessToken = jwtService.generateAccessToken(principal);
         String rawRefreshToken = generateRawRefreshToken();

@@ -1,3 +1,6 @@
+app:
+  environment: test
+
 spring:
   datasource:
     url: jdbc:h2:mem:zeeshop-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
