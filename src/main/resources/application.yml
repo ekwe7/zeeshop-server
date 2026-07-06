@@ -1,13 +1,72 @@
-spring.application.name=zeeshop-server
+spring:
+  application:
+    name: zeeshop-server
 
-server.port=8083
+  datasource:
+    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/zeeshop}
+    username: ${JDBC_DATABASE_USERNAME:zeeshop_user}
+    password: ${JDBC_DATABASE_PASSWORD:zeeshop_password}
+    driver-class-name: ${JDBC_DATABASE_DRIVER:org.postgresql.Driver}
 
-spring.datasource.url=${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/zeeshop}
-spring.datasource.username=${JDBC_DATABASE_USERNAME:postgres}
-spring.datasource.password=${JDBC_DATABASE_PASSWORD:postgres}
-spring.datasource.driver-class-name=${JDBC_DATABASE_DRIVER:org.postgresql.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:true}
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
 
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+    time-zone: UTC
+    default-property-inclusion: non_null
+
+server:
+  port: ${SERVER_PORT:8083}
+  error:
+    include-message: always
+    include-binding-errors: always
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  show-actuator: false
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+  allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+  allowed-headers: "*"
+  max-age: 3600
+
+security:
+  jwt:
+    # Dev-only default. MUST be overridden via JWT_SECRET in every non-local environment.
+    secret: ${JWT_SECRET:dev-only-secret-do-not-use-in-production-1234567890abcdef}
+    access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:900000}       # 15 minutes
+    refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:604800000}  # 7 days
+
+admin:
+  seed:
+    username: ${ADMIN_USERNAME:admin}
+    email: ${ADMIN_EMAIL:admin@zeeshop.com}
+    # Dev-only default. MUST be overridden via ADMIN_PASSWORD in every non-local environment.
+    password: ${ADMIN_PASSWORD:ChangeMe123!}
+
+logging:
+  level:
+    com.ekwe_hub.zeeshopserver: ${LOG_LEVEL:INFO}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:DEBUG}
+    org.springframework.web: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE:logs/zeeshop-server.log}
