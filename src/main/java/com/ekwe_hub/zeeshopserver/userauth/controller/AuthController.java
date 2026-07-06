@@ -1,9 +1,9 @@
 package com.ekwe_hub.zeeshopserver.userauth.controller;
 
 import com.ekwe_hub.zeeshopserver.shared.api.response.ApiResponse;
-import com.ekwe_hub.zeeshopserver.userauth.dto.AuthResponse;
-import com.ekwe_hub.zeeshopserver.userauth.dto.LoginRequest;
-import com.ekwe_hub.zeeshopserver.userauth.dto.TokenRequest;
+import com.ekwe_hub.zeeshopserver.userauth.dto.request.LoginRequest;
+import com.ekwe_hub.zeeshopserver.userauth.dto.request.TokenRequest;
+import com.ekwe_hub.zeeshopserver.userauth.dto.response.AuthResponse;
 import com.ekwe_hub.zeeshopserver.userauth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.ekwe_hub.zeeshopserver.userauth.dto;
+package com.ekwe_hub.zeeshopserver.userauth.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

@@ -3,7 +3,7 @@ package com.ekwe_hub.zeeshopserver.userauth.service;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.infrastructure.security.JwtService;
 import com.ekwe_hub.zeeshopserver.shared.infrastructure.security.UserPrincipal;
-import com.ekwe_hub.zeeshopserver.userauth.dto.AuthResponse;
+import com.ekwe_hub.zeeshopserver.userauth.dto.response.AuthResponse;
 import com.ekwe_hub.zeeshopserver.userauth.entity.RefreshToken;
 import com.ekwe_hub.zeeshopserver.userauth.entity.User;
 import com.ekwe_hub.zeeshopserver.userauth.repository.RefreshTokenRepository;
