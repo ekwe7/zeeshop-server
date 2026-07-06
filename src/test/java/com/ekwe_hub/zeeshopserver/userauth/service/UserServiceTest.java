@@ -1,7 +1,9 @@
 package com.ekwe_hub.zeeshopserver.userauth.service;
 
+import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
+import com.ekwe_hub.zeeshopserver.userauth.dto.request.ChangePasswordRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.CreateUserRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.UpdateUserRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.response.UserResponse;
@@ -13,7 +15,6 @@ import com.ekwe_hub.zeeshopserver.userauth.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,7 +27,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -35,6 +35,10 @@ import static org.mockito.Mockito.when;
 /**
  * Pure unit tests: UserRepository/RoleRepository/UserMapper/PasswordEncoder
  * are all mocked, no Spring context and no real persistence involved.
+ *
+ * UserService only orchestrates (validate -> resolve dependencies -> call
+ * mapper/repository), so these tests verify orchestration and delegation,
+ * not field-by-field conversion — that belongs to UserMapperTest.
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -115,43 +119,22 @@ class UserServiceTest {
     }
 
     @Test
-    void createUser_hashesPasswordAndPersists_whenUsernameAndEmailAreFree() {
+    void createUser_resolvesRoleAndEncodesPassword_beforeDelegatingToMapper() {
         CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId, true);
 
         when(userRepository.existsByUsername("jdoe")).thenReturn(false);
         when(userRepository.existsByEmail("jdoe@example.com")).thenReturn(false);
         when(roleRepository.findById(roleId)).thenReturn(Optional.of(role));
         when(passwordEncoder.encode("plain-password")).thenReturn("hashed-password");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
+        when(userMapper.toEntity(request, "hashed-password", role)).thenReturn(user);
+        when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toResponse(user)).thenReturn(userResponse);
 
         UserResponse result = userService.createUser(request);
 
         assertThat(result).isEqualTo(userResponse);
-
-        ArgumentCaptor<User> savedUser = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(savedUser.capture());
-        assertThat(savedUser.getValue().getPassword()).isEqualTo("hashed-password");
-        assertThat(savedUser.getValue().getRole()).isEqualTo(role);
-        assertThat(savedUser.getValue().isEnabled()).isTrue();
-    }
-
-    @Test
-    void createUser_defaultsEnabledToTrue_whenNotSpecified() {
-        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId, null);
-
-        when(userRepository.existsByUsername(anyString())).thenReturn(false);
-        when(userRepository.existsByEmail(anyString())).thenReturn(false);
-        when(roleRepository.findById(roleId)).thenReturn(Optional.of(role));
-        when(passwordEncoder.encode(anyString())).thenReturn("hashed-password");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
-
-        userService.createUser(request);
-
-        ArgumentCaptor<User> savedUser = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(savedUser.capture());
-        assertThat(savedUser.getValue().isEnabled()).isTrue();
+        verify(userMapper).toEntity(request, "hashed-password", role);
+        verify(userRepository).save(user);
     }
 
     @Test
@@ -191,7 +174,7 @@ class UserServiceTest {
     }
 
     @Test
-    void updateUser_updatesFieldsAndRehashesPassword_whenPasswordSupplied() {
+    void updateUser_delegatesFieldAssignmentToMapper_andRehashesPassword_whenSupplied() {
         UpdateUserRequest request = new UpdateUserRequest("jdoe2", "jdoe2@example.com", "new-password", roleId, false);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -202,11 +185,10 @@ class UserServiceTest {
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(userResponse);
 
-        userService.updateUser(userId, request);
+        UserResponse result = userService.updateUser(userId, request);
 
-        assertThat(user.getUsername()).isEqualTo("jdoe2");
-        assertThat(user.getEmail()).isEqualTo("jdoe2@example.com");
-        assertThat(user.isEnabled()).isFalse();
+        assertThat(result).isEqualTo(userResponse);
+        verify(userMapper).updateEntity(request, role, user);
         assertThat(user.getPassword()).isEqualTo("new-hashed-password");
     }
 
@@ -224,7 +206,7 @@ class UserServiceTest {
         userService.updateUser(userId, request);
 
         assertThat(user.getPassword()).isEqualTo("hashed-password");
-        verify(passwordEncoder, never()).encode(anyString());
+        verify(passwordEncoder, never()).encode(any());
     }
 
     @Test
@@ -294,5 +276,92 @@ class UserServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(userRepository, never()).delete(any());
+    }
+
+    @Test
+    void activateUser_enablesUser_whenUserExists() {
+        user.setEnabled(false);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toResponse(user)).thenReturn(userResponse);
+
+        UserResponse result = userService.activateUser(userId);
+
+        assertThat(result).isEqualTo(userResponse);
+        assertThat(user.isEnabled()).isTrue();
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void activateUser_throwsResourceNotFound_whenUserMissing() {
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.activateUser(userId))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void deactivateUser_disablesUser_whenUserExists() {
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toResponse(user)).thenReturn(userResponse);
+
+        UserResponse result = userService.deactivateUser(userId);
+
+        assertThat(result).isEqualTo(userResponse);
+        assertThat(user.isEnabled()).isFalse();
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void deactivateUser_throwsResourceNotFound_whenUserMissing() {
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.deactivateUser(userId))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_updatesToNewHash_whenCurrentPasswordMatches() {
+        ChangePasswordRequest request = new ChangePasswordRequest("current-password", "new-password");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("current-password", "hashed-password")).thenReturn(true);
+        when(passwordEncoder.encode("new-password")).thenReturn("new-hashed-password");
+        when(userRepository.save(user)).thenReturn(user);
+
+        userService.changePassword(userId, request);
+
+        assertThat(user.getPassword()).isEqualTo("new-hashed-password");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void changePassword_throwsBusinessRuleViolation_whenCurrentPasswordWrong() {
+        ChangePasswordRequest request = new ChangePasswordRequest("wrong-password", "new-password");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong-password", "hashed-password")).thenReturn(false);
+
+        assertThatThrownBy(() -> userService.changePassword(userId, request))
+                .isInstanceOf(BusinessRuleViolationException.class);
+
+        assertThat(user.getPassword()).isEqualTo("hashed-password");
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_throwsResourceNotFound_whenUserMissing() {
+        ChangePasswordRequest request = new ChangePasswordRequest("current-password", "new-password");
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.changePassword(userId, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(userRepository, never()).save(any());
     }
 }

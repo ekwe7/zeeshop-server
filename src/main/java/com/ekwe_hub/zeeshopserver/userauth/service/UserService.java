@@ -1,7 +1,9 @@
 package com.ekwe_hub.zeeshopserver.userauth.service;
 
+import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
+import com.ekwe_hub.zeeshopserver.userauth.dto.request.ChangePasswordRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.CreateUserRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.UpdateUserRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.response.UserResponse;
@@ -78,7 +80,7 @@ public class UserService {
         userMapper.updateEntity(request, findRoleOrThrow(request.roleId()), user);
 
         if (request.password() != null && !request.password().isBlank()) {
-            user.setPassword(passwordEncoder.encode(request.password()));
+            user.updatePassword(passwordEncoder.encode(request.password()));
         }
 
         return userMapper.toResponse(userRepository.save(user));
@@ -87,6 +89,32 @@ public class UserService {
     @Transactional
     public void deleteUser(UUID id) {
         userRepository.delete(findUserOrThrow(id));
+    }
+
+    @Transactional
+    public UserResponse activateUser(UUID id) {
+        User user = findUserOrThrow(id);
+        user.activate();
+        return userMapper.toResponse(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserResponse deactivateUser(UUID id) {
+        User user = findUserOrThrow(id);
+        user.deactivate();
+        return userMapper.toResponse(userRepository.save(user));
+    }
+
+    @Transactional
+    public void changePassword(UUID id, ChangePasswordRequest request) {
+        User user = findUserOrThrow(id);
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new BusinessRuleViolationException("Current password is incorrect");
+        }
+
+        user.updatePassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 
     private User findUserOrThrow(UUID id) {

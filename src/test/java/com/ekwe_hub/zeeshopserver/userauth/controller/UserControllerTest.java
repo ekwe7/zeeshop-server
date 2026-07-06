@@ -1,9 +1,13 @@
 package com.ekwe_hub.zeeshopserver.userauth.controller;
 
 import com.ekwe_hub.zeeshopserver.shared.api.response.ApiResponse;
+import com.ekwe_hub.zeeshopserver.shared.infrastructure.security.UserPrincipal;
+import com.ekwe_hub.zeeshopserver.userauth.dto.request.ChangePasswordRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.CreateUserRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.UpdateUserRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.response.UserResponse;
+import com.ekwe_hub.zeeshopserver.userauth.entity.Role;
+import com.ekwe_hub.zeeshopserver.userauth.entity.User;
 import com.ekwe_hub.zeeshopserver.userauth.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +44,7 @@ class UserControllerTest {
     private UUID userId;
     private UUID roleId;
     private UserResponse userResponse;
+    private UserPrincipal principal;
 
     @BeforeEach
     void setUp() {
@@ -52,6 +57,17 @@ class UserControllerTest {
                 .roleName("STAFF")
                 .enabled(true)
                 .build();
+
+        Role role = Role.builder().name("STAFF").build();
+        User user = User.builder()
+                .username("jdoe")
+                .email("jdoe@example.com")
+                .password("hashed-password")
+                .role(role)
+                .enabled(true)
+                .build();
+        user.setId(userId);
+        principal = new UserPrincipal(user);
     }
 
     @Test
@@ -110,5 +126,53 @@ class UserControllerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().isSuccess()).isTrue();
         verify(userService).deleteUser(userId);
+    }
+
+    @Test
+    void getCurrentUser_returnsOkWithCallersOwnProfile() {
+        when(userService.getUser(userId)).thenReturn(userResponse);
+
+        ResponseEntity<ApiResponse<UserResponse>> response = userController.getCurrentUser(principal);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getData()).isEqualTo(userResponse);
+        verify(userService).getUser(userId);
+    }
+
+    @Test
+    void activateUser_returnsOkWithServiceResult() {
+        when(userService.activateUser(userId)).thenReturn(userResponse);
+
+        ResponseEntity<ApiResponse<UserResponse>> response = userController.activateUser(userId);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getData()).isEqualTo(userResponse);
+        verify(userService).activateUser(userId);
+    }
+
+    @Test
+    void deactivateUser_returnsOkWithServiceResult() {
+        when(userService.deactivateUser(userId)).thenReturn(userResponse);
+
+        ResponseEntity<ApiResponse<UserResponse>> response = userController.deactivateUser(userId);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getData()).isEqualTo(userResponse);
+        verify(userService).deactivateUser(userId);
+    }
+
+    @Test
+    void changePassword_returnsOkAndDelegatesToServiceForCallersOwnAccount() {
+        ChangePasswordRequest request = new ChangePasswordRequest("current-password", "new-password");
+
+        ResponseEntity<ApiResponse<Void>> response = userController.changePassword(principal, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isSuccess()).isTrue();
+        verify(userService).changePassword(userId, request);
     }
 }

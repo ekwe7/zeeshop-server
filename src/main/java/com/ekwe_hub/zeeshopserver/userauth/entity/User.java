@@ -48,4 +48,17 @@ public class User extends AuditableEntity {
     @Column(nullable = false)
     @Builder.Default
     private boolean enabled = true;
+
+    public void activate() {
+        this.enabled = true;
+    }
+
+    public void deactivate() {
+        this.enabled = false;
+    }
+
+    // Caller must already have encoded the password — this entity never hashes anything itself
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }
