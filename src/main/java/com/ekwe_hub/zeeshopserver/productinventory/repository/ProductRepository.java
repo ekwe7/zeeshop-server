@@ -1,0 +1,13 @@
+package com.ekwe_hub.zeeshopserver.productinventory.repository;
+
+import com.ekwe_hub.zeeshopserver.productinventory.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.UUID;
+
+public interface ProductRepository extends JpaRepository<Product, UUID> {
+
+    boolean existsBySku(String sku);
+
+    boolean existsBySkuAndIdNot(String sku, UUID id);
+}
