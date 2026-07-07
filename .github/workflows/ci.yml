@@ -48,7 +48,7 @@ jobs:
 
       - name: Run Tests (Windows)
         if: runner.os == 'Windows'
-        run: gradlew.bat clean test
+        run: .\gradlew.bat clean test
 
   build:
     name: Build Application
