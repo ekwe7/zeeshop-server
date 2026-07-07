@@ -12,7 +12,8 @@ import lombok.Setter;
 
 /**
  * Unit of measure a Product is stocked/sold in (e.g. "Kilogram" / "kg").
- * Like Category, this is a lookup entity referenced by id — no CRUD here.
+ * See UnitController for CRUD; deletion is blocked while a Product still
+ * references the unit.
  */
 @Getter
 @Setter

@@ -1,12 +1,15 @@
 package com.ekwe_hub.zeeshopserver.productinventory.controller;
 
 import com.ekwe_hub.zeeshopserver.shared.api.response.ApiResponse;
+import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.CreateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.ProductResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,9 +20,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -34,10 +37,20 @@ public class ProductController {
 
     private final ProductService productService;
 
+    /**
+     * name/categoryId/unitId are optional filters, ANDed together when present.
+     * Pagination/sort come from standard Spring Data query params
+     * (page, size, sort) — defaults to 20 products sorted by name.
+     */
     @GetMapping
     @PreAuthorize("hasAuthority('INVENTORY_READ')")
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> getAllProducts() {
-        return ResponseEntity.ok(ApiResponse.success(productService.getAllProducts()));
+    public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getAllProducts(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) UUID unitId,
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(
+                productService.getAllProducts(name, categoryId, unitId, pageable)));
     }
 
     @GetMapping("/{id}")

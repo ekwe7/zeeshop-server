@@ -2,6 +2,7 @@ package com.ekwe_hub.zeeshopserver.productinventory.service;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
+import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.CreateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.ProductResponse;
@@ -13,12 +14,14 @@ import com.ekwe_hub.zeeshopserver.productinventory.mapper.ProductMapper;
 import com.ekwe_hub.zeeshopserver.productinventory.repository.CategoryRepository;
 import com.ekwe_hub.zeeshopserver.productinventory.repository.InventoryRepository;
 import com.ekwe_hub.zeeshopserver.productinventory.repository.ProductRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.ProductSpecifications;
 import com.ekwe_hub.zeeshopserver.productinventory.repository.UnitRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -39,10 +42,12 @@ public class ProductService {
     private final InventoryRepository inventoryRepository;
     private final ProductMapper productMapper;
 
-    public List<ProductResponse> getAllProducts() {
-        return productRepository.findAll().stream()
-                .map(product -> productMapper.toResponse(product, findInventoryOrThrow(product.getId())))
-                .toList();
+    public PageResponse<ProductResponse> getAllProducts(String name, UUID categoryId, UUID unitId, Pageable pageable) {
+        Page<Product> products = productRepository.findAll(
+                ProductSpecifications.withFilters(name, categoryId, unitId), pageable);
+        Page<ProductResponse> responses = products
+                .map(product -> productMapper.toResponse(product, findInventoryOrThrow(product.getId())));
+        return PageResponse.from(responses);
     }
 
     public ProductResponse getProduct(UUID id) {

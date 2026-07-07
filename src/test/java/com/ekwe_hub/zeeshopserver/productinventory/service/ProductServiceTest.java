@@ -2,6 +2,7 @@ package com.ekwe_hub.zeeshopserver.productinventory.service;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
+import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.CreateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.ProductResponse;
@@ -21,6 +22,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,6 +35,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -115,13 +121,16 @@ class ProductServiceTest {
 
     @Test
     void getAllProducts_mapsEveryPersistedProduct() {
-        when(productRepository.findAll()).thenReturn(List.of(product));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(productRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(product), pageable, 1));
         when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.of(inventory));
         when(productMapper.toResponse(product, inventory)).thenReturn(productResponse);
 
-        List<ProductResponse> result = productService.getAllProducts();
+        PageResponse<ProductResponse> result = productService.getAllProducts(null, null, null, pageable);
 
-        assertThat(result).containsExactly(productResponse);
+        assertThat(result.content()).containsExactly(productResponse);
+        assertThat(result.totalElements()).isEqualTo(1);
     }
 
     @Test
@@ -339,7 +348,7 @@ class ProductServiceTest {
         assertThatThrownBy(() -> productService.deleteProduct(productId))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verify(productRepository, never()).delete(any());
+        verify(productRepository, never()).delete(any(Product.class));
         verify(inventoryRepository, never()).delete(any());
     }
 }
