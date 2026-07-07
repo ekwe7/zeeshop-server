@@ -1,6 +1,7 @@
 package com.ekwe_hub.zeeshopserver.productinventory.controller;
 
 import com.ekwe_hub.zeeshopserver.shared.api.response.ApiResponse;
+import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.CreateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.ProductResponse;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -63,13 +66,23 @@ class ProductControllerTest {
 
     @Test
     void getAllProducts_returnsOkWithServiceResult() {
-        when(productService.getAllProducts()).thenReturn(List.of(productResponse));
+        Pageable pageable = PageRequest.of(0, 20);
+        PageResponse<ProductResponse> page = PageResponse.<ProductResponse>builder()
+                .content(List.of(productResponse))
+                .page(0)
+                .size(20)
+                .totalElements(1)
+                .totalPages(1)
+                .last(true)
+                .build();
+        when(productService.getAllProducts(null, null, null, pageable)).thenReturn(page);
 
-        ResponseEntity<ApiResponse<List<ProductResponse>>> response = productController.getAllProducts();
+        ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> response =
+                productController.getAllProducts(null, null, null, pageable);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getData()).containsExactly(productResponse);
+        assertThat(response.getBody().getData().content()).containsExactly(productResponse);
     }
 
     @Test

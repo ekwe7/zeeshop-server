@@ -12,8 +12,8 @@ import lombok.Setter;
 
 /**
  * Groups products for browsing/reporting (e.g. "Beverages", "Stationery").
- * Deliberately has no CRUD of its own yet — categories are looked up by id
- * when a Product references them, the same way Role is looked up for User.
+ * See CategoryController for CRUD; deletion is blocked while a Product still
+ * references the category.
  */
 @Getter
 @Setter
