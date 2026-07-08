@@ -1,4 +1,4 @@
-package com.ekwe_hub.zeeshopserver.productinventory.repository;
+package com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces;
 
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;

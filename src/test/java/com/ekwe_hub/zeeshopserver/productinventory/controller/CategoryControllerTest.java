@@ -4,7 +4,7 @@ import com.ekwe_hub.zeeshopserver.shared.api.response.ApiResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.CreateCategoryRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateCategoryRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.CategoryResponse;
-import com.ekwe_hub.zeeshopserver.productinventory.service.CategoryService;
+import com.ekwe_hub.zeeshopserver.productinventory.service.interfaces.CategoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
