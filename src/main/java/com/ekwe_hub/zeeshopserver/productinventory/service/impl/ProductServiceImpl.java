@@ -1,4 +1,4 @@
-package com.ekwe_hub.zeeshopserver.productinventory.service;
+package com.ekwe_hub.zeeshopserver.productinventory.service.impl;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
@@ -11,11 +11,11 @@ import com.ekwe_hub.zeeshopserver.productinventory.entity.Inventory;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Product;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Unit;
 import com.ekwe_hub.zeeshopserver.productinventory.mapper.ProductMapper;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.CategoryRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.InventoryRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.ProductRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.ProductSpecifications;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.UnitRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.CategoryRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.InventoryRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.ProductRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.UnitRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.service.interfaces.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,17 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * CRUD for the product catalogue. Every Product owns exactly one Inventory
- * record, so this service also provisions/retires that record alongside the
- * product it belongs to — the same way UserService resolves a Role when
- * creating a User. Adjusting stock quantities on an existing product is a
- * separate concern and does not live here.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ProductService {
+public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -42,19 +35,21 @@ public class ProductService {
     private final InventoryRepository inventoryRepository;
     private final ProductMapper productMapper;
 
+    @Override
     public PageResponse<ProductResponse> getAllProducts(String name, UUID categoryId, UUID unitId, Pageable pageable) {
-        Page<Product> products = productRepository.findAll(
-                ProductSpecifications.withFilters(name, categoryId, unitId), pageable);
+        Page<Product> products = productRepository.search(name, categoryId, unitId, pageable);
         Page<ProductResponse> responses = products
                 .map(product -> productMapper.toResponse(product, findInventoryOrThrow(product.getId())));
         return PageResponse.from(responses);
     }
 
+    @Override
     public ProductResponse getProduct(UUID id) {
         Product product = findProductOrThrow(id);
         return productMapper.toResponse(product, findInventoryOrThrow(id));
     }
 
+    @Override
     @Transactional
     public ProductResponse createProduct(CreateProductRequest request) {
         if (productRepository.existsBySku(request.sku())) {
@@ -77,6 +72,7 @@ public class ProductService {
         return productMapper.toResponse(product, inventory);
     }
 
+    @Override
     @Transactional
     public ProductResponse updateProduct(UUID id, UpdateProductRequest request) {
         Product product = findProductOrThrow(id);
@@ -96,6 +92,7 @@ public class ProductService {
         return productMapper.toResponse(product, findInventoryOrThrow(id));
     }
 
+    @Override
     @Transactional
     public void deleteProduct(UUID id) {
         Product product = findProductOrThrow(id);

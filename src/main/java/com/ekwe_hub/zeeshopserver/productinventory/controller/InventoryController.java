@@ -3,7 +3,7 @@ package com.ekwe_hub.zeeshopserver.productinventory.controller;
 import com.ekwe_hub.zeeshopserver.shared.api.response.ApiResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.AdjustInventoryRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.InventoryResponse;
-import com.ekwe_hub.zeeshopserver.productinventory.service.InventoryService;
+import com.ekwe_hub.zeeshopserver.productinventory.service.interfaces.InventoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

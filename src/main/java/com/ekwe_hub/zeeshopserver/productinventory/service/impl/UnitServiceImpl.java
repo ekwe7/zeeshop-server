@@ -1,4 +1,4 @@
-package com.ekwe_hub.zeeshopserver.productinventory.service;
+package com.ekwe_hub.zeeshopserver.productinventory.service.impl;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
@@ -8,8 +8,9 @@ import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateUnitRequest
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.UnitResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Unit;
 import com.ekwe_hub.zeeshopserver.productinventory.mapper.UnitMapper;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.ProductRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.UnitRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.ProductRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.UnitRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.service.interfaces.UnitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,30 +18,28 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * CRUD for units of measure. Deletion is blocked while any Product still
- * references the unit, mirroring CategoryService's guard for the same reason:
- * Product.unit is a required relationship.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class UnitService {
+public class UnitServiceImpl implements UnitService {
 
     private final UnitRepository unitRepository;
     private final ProductRepository productRepository;
     private final UnitMapper unitMapper;
 
+    @Override
     public List<UnitResponse> getAllUnits() {
         return unitRepository.findAll().stream()
                 .map(unitMapper::toResponse)
                 .toList();
     }
 
+    @Override
     public UnitResponse getUnit(UUID id) {
         return unitMapper.toResponse(findUnitOrThrow(id));
     }
 
+    @Override
     @Transactional
     public UnitResponse createUnit(CreateUnitRequest request) {
         if (unitRepository.existsByName(request.name())) {
@@ -55,6 +54,7 @@ public class UnitService {
         return unitMapper.toResponse(unit);
     }
 
+    @Override
     @Transactional
     public UnitResponse updateUnit(UUID id, UpdateUnitRequest request) {
         Unit unit = findUnitOrThrow(id);
@@ -71,6 +71,7 @@ public class UnitService {
         return unitMapper.toResponse(unit);
     }
 
+    @Override
     @Transactional
     public void deleteUnit(UUID id) {
         Unit unit = findUnitOrThrow(id);

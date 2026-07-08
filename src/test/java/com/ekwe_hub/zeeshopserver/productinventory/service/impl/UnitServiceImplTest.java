@@ -1,4 +1,4 @@
-package com.ekwe_hub.zeeshopserver.productinventory.service;
+package com.ekwe_hub.zeeshopserver.productinventory.service.impl;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
@@ -8,8 +8,8 @@ import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateUnitRequest
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.UnitResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Unit;
 import com.ekwe_hub.zeeshopserver.productinventory.mapper.UnitMapper;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.ProductRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.UnitRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.ProductRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.UnitRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UnitServiceTest {
+class UnitServiceImplTest {
 
     @Mock
     private UnitRepository unitRepository;
@@ -41,7 +41,7 @@ class UnitServiceTest {
     private UnitMapper unitMapper;
 
     @InjectMocks
-    private UnitService unitService;
+    private UnitServiceImpl unitService;
 
     private UUID unitId;
     private Unit unit;

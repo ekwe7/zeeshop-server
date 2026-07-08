@@ -1,4 +1,4 @@
-package com.ekwe_hub.zeeshopserver.productinventory.service;
+package com.ekwe_hub.zeeshopserver.productinventory.service.impl;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
@@ -11,10 +11,10 @@ import com.ekwe_hub.zeeshopserver.productinventory.entity.Inventory;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Product;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Unit;
 import com.ekwe_hub.zeeshopserver.productinventory.mapper.ProductMapper;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.CategoryRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.InventoryRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.ProductRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.UnitRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.CategoryRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.InventoryRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.ProductRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.UnitRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +25,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -35,7 +34,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -46,12 +44,12 @@ import static org.mockito.Mockito.when;
  * InventoryRepository/ProductMapper are all mocked, no Spring context and no
  * real persistence involved.
  *
- * ProductService only orchestrates (validate -> resolve dependencies -> call
- * mapper/repository), so these tests verify orchestration and delegation,
- * not field-by-field conversion.
+ * ProductServiceImpl only orchestrates (validate -> resolve dependencies ->
+ * call mapper/repository), so these tests verify orchestration and
+ * delegation, not field-by-field conversion.
  */
 @ExtendWith(MockitoExtension.class)
-class ProductServiceTest {
+class ProductServiceImplTest {
 
     @Mock
     private ProductRepository productRepository;
@@ -69,7 +67,7 @@ class ProductServiceTest {
     private ProductMapper productMapper;
 
     @InjectMocks
-    private ProductService productService;
+    private ProductServiceImpl productService;
 
     private UUID productId;
     private UUID categoryId;
@@ -122,7 +120,7 @@ class ProductServiceTest {
     @Test
     void getAllProducts_mapsEveryPersistedProduct() {
         Pageable pageable = PageRequest.of(0, 20);
-        when(productRepository.findAll(any(Specification.class), eq(pageable)))
+        when(productRepository.search(null, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(product), pageable, 1));
         when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.of(inventory));
         when(productMapper.toResponse(product, inventory)).thenReturn(productResponse);

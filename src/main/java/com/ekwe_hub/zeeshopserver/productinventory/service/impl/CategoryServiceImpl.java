@@ -1,4 +1,5 @@
-package com.ekwe_hub.zeeshopserver.productinventory.service;
+
+package com.ekwe_hub.zeeshopserver.productinventory.service.impl;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
@@ -8,8 +9,9 @@ import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateCategoryReq
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.CategoryResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Category;
 import com.ekwe_hub.zeeshopserver.productinventory.mapper.CategoryMapper;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.CategoryRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.ProductRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.CategoryRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.ProductRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.service.interfaces.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,31 +19,28 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * CRUD for product categories. Deletion is blocked while any Product still
- * references the category — Product.category is a required (not-null)
- * relationship, so an unguarded delete would either fail on the database FK
- * constraint or orphan products, depending on cascade settings.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class CategoryService {
+public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final CategoryMapper categoryMapper;
 
+    @Override
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .map(categoryMapper::toResponse)
                 .toList();
     }
 
+    @Override
     public CategoryResponse getCategory(UUID id) {
         return categoryMapper.toResponse(findCategoryOrThrow(id));
     }
 
+    @Override
     @Transactional
     public CategoryResponse createCategory(CreateCategoryRequest request) {
         if (categoryRepository.existsByName(request.name())) {
@@ -53,6 +52,7 @@ public class CategoryService {
         return categoryMapper.toResponse(category);
     }
 
+    @Override
     @Transactional
     public CategoryResponse updateCategory(UUID id, UpdateCategoryRequest request) {
         Category category = findCategoryOrThrow(id);
@@ -66,6 +66,7 @@ public class CategoryService {
         return categoryMapper.toResponse(category);
     }
 
+    @Override
     @Transactional
     public void deleteCategory(UUID id) {
         Category category = findCategoryOrThrow(id);

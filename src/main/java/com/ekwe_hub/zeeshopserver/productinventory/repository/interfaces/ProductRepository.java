@@ -1,12 +1,11 @@
-package com.ekwe_hub.zeeshopserver.productinventory.repository;
+package com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces;
 
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.UUID;
 
-public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpecificationExecutor<Product> {
+public interface ProductRepository extends JpaRepository<Product, UUID>, ProductRepositoryCustom {
 
     boolean existsBySku(String sku);
 

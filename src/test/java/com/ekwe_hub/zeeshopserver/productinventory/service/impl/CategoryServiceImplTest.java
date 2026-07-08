@@ -1,4 +1,4 @@
-package com.ekwe_hub.zeeshopserver.productinventory.service;
+package com.ekwe_hub.zeeshopserver.productinventory.service.impl;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.DuplicateResourceException;
@@ -8,8 +8,8 @@ import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateCategoryReq
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.CategoryResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Category;
 import com.ekwe_hub.zeeshopserver.productinventory.mapper.CategoryMapper;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.CategoryRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.ProductRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.CategoryRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CategoryServiceTest {
+class CategoryServiceImplTest {
 
     @Mock
     private CategoryRepository categoryRepository;
@@ -41,7 +41,7 @@ class CategoryServiceTest {
     private CategoryMapper categoryMapper;
 
     @InjectMocks
-    private CategoryService categoryService;
+    private CategoryServiceImpl categoryService;
 
     private UUID categoryId;
     private Category category;

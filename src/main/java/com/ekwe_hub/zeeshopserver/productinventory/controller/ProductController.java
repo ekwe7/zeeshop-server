@@ -5,7 +5,7 @@ import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.CreateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.request.UpdateProductRequest;
 import com.ekwe_hub.zeeshopserver.productinventory.dto.response.ProductResponse;
-import com.ekwe_hub.zeeshopserver.productinventory.service.ProductService;
+import com.ekwe_hub.zeeshopserver.productinventory.service.interfaces.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;

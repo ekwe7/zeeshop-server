@@ -1,4 +1,4 @@
-package com.ekwe_hub.zeeshopserver.productinventory.service;
+package com.ekwe_hub.zeeshopserver.productinventory.service.impl;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
@@ -9,7 +9,7 @@ import com.ekwe_hub.zeeshopserver.productinventory.entity.Inventory;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Product;
 import com.ekwe_hub.zeeshopserver.productinventory.entity.Unit;
 import com.ekwe_hub.zeeshopserver.productinventory.mapper.InventoryMapper;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.InventoryRepository;
+import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.InventoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class InventoryServiceTest {
+class InventoryServiceImplTest {
 
     @Mock
     private InventoryRepository inventoryRepository;
@@ -38,7 +38,7 @@ class InventoryServiceTest {
     private InventoryMapper inventoryMapper;
 
     @InjectMocks
-    private InventoryService inventoryService;
+    private InventoryServiceImpl inventoryService;
 
     private UUID productId;
     private Product product;
