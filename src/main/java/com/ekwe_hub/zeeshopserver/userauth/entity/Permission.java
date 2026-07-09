@@ -4,7 +4,7 @@ package com.ekwe_hub.zeeshopserver.userauth.entity;
  * Fine-grained actions that can be granted to a Role.
  *
  * One READ/WRITE pair per business module (mirrors the top-level package
- * structure: sales, productinventory, supplierpurchase, customerdebt, expense)
+ * structure: sales, productInventory, supplierpurchase, customerdebt, expense)
  * plus two administrative permissions for managing users and roles themselves.
  *
  * Stored on Role as a Set<Permission> and exposed to Spring Security as
