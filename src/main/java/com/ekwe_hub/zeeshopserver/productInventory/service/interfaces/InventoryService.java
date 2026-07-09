@@ -1,7 +1,11 @@
 package com.ekwe_hub.zeeshopserver.productInventory.service.interfaces;
 
 import com.ekwe_hub.zeeshopserver.productInventory.dto.request.AdjustInventoryRequest;
+import com.ekwe_hub.zeeshopserver.productInventory.dto.request.SetLowStockThresholdRequest;
+import com.ekwe_hub.zeeshopserver.productInventory.dto.response.InventoryAdjustmentResponse;
 import com.ekwe_hub.zeeshopserver.productInventory.dto.response.InventoryResponse;
+import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,4 +23,10 @@ public interface InventoryService {
     InventoryResponse getInventoryByProduct(UUID productId);
 
     InventoryResponse adjustStock(UUID productId, AdjustInventoryRequest request);
+
+    List<InventoryResponse> getLowStockInventory();
+
+    InventoryResponse updateLowStockThreshold(UUID productId, SetLowStockThresholdRequest request);
+
+    PageResponse<InventoryAdjustmentResponse> getInventoryHistory(UUID productId, Pageable pageable);
 }

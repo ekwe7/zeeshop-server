@@ -2,13 +2,18 @@ package com.ekwe_hub.zeeshopserver.productInventory.service.impl;
 
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
+import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
 import com.ekwe_hub.zeeshopserver.productInventory.dto.request.AdjustInventoryRequest;
+import com.ekwe_hub.zeeshopserver.productInventory.dto.request.SetLowStockThresholdRequest;
+import com.ekwe_hub.zeeshopserver.productInventory.dto.response.InventoryAdjustmentResponse;
 import com.ekwe_hub.zeeshopserver.productInventory.dto.response.InventoryResponse;
 import com.ekwe_hub.zeeshopserver.productInventory.entity.Category;
 import com.ekwe_hub.zeeshopserver.productInventory.entity.Inventory;
+import com.ekwe_hub.zeeshopserver.productInventory.entity.InventoryAdjustment;
 import com.ekwe_hub.zeeshopserver.productInventory.entity.Product;
 import com.ekwe_hub.zeeshopserver.productInventory.entity.Unit;
 import com.ekwe_hub.zeeshopserver.productInventory.mapper.InventoryMapper;
+import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.InventoryAdjustmentRepository;
 import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.InventoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +22,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,6 +33,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +43,9 @@ class InventoryServiceImplTest {
 
     @Mock
     private InventoryRepository inventoryRepository;
+
+    @Mock
+    private InventoryAdjustmentRepository inventoryAdjustmentRepository;
 
     @Mock
     private InventoryMapper inventoryMapper;
@@ -64,6 +77,7 @@ class InventoryServiceImplTest {
         inventory = Inventory.builder()
                 .product(product)
                 .quantityOnHand(10)
+                .lowStockThreshold(3)
                 .build();
 
         inventoryResponse = InventoryResponse.builder()
@@ -71,6 +85,7 @@ class InventoryServiceImplTest {
                 .productName("Coke")
                 .sku("SKU-001")
                 .quantityOnHand(10)
+                .lowStockThreshold(3)
                 .build();
     }
 
@@ -104,7 +119,7 @@ class InventoryServiceImplTest {
 
     @Test
     void adjustStock_increasesQuantity_whenDeltaPositive() {
-        AdjustInventoryRequest request = new AdjustInventoryRequest(5);
+        AdjustInventoryRequest request = new AdjustInventoryRequest(5, "Restock");
         when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.of(inventory));
         when(inventoryRepository.save(inventory)).thenReturn(inventory);
         when(inventoryMapper.toResponse(inventory)).thenReturn(inventoryResponse);
@@ -118,7 +133,7 @@ class InventoryServiceImplTest {
 
     @Test
     void adjustStock_decreasesQuantity_whenDeltaNegative() {
-        AdjustInventoryRequest request = new AdjustInventoryRequest(-4);
+        AdjustInventoryRequest request = new AdjustInventoryRequest(-4, "Damaged");
         when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.of(inventory));
         when(inventoryRepository.save(inventory)).thenReturn(inventory);
         when(inventoryMapper.toResponse(inventory)).thenReturn(inventoryResponse);
@@ -131,24 +146,126 @@ class InventoryServiceImplTest {
     }
 
     @Test
+    void adjustStock_recordsHistoryRow_withQuantityBeforeAndAfterAndReason() {
+        AdjustInventoryRequest request = new AdjustInventoryRequest(5, "Restock");
+        when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(inventory)).thenReturn(inventory);
+        when(inventoryMapper.toResponse(inventory)).thenReturn(inventoryResponse);
+
+        inventoryService.adjustStock(productId, request);
+
+        ArgumentCaptor<InventoryAdjustment> captor = ArgumentCaptor.forClass(InventoryAdjustment.class);
+        verify(inventoryAdjustmentRepository).save(captor.capture());
+        assertThat(captor.getValue().getProduct()).isEqualTo(product);
+        assertThat(captor.getValue().getQuantityBefore()).isEqualTo(10);
+        assertThat(captor.getValue().getQuantityAfter()).isEqualTo(15);
+        assertThat(captor.getValue().getReason()).isEqualTo("Restock");
+    }
+
+    @Test
     void adjustStock_throwsBusinessRuleViolation_whenResultWouldGoNegative() {
-        AdjustInventoryRequest request = new AdjustInventoryRequest(-11);
+        AdjustInventoryRequest request = new AdjustInventoryRequest(-11, null);
         when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.of(inventory));
 
         assertThatThrownBy(() -> inventoryService.adjustStock(productId, request))
                 .isInstanceOf(BusinessRuleViolationException.class);
 
-        verify(inventoryRepository, org.mockito.Mockito.never()).save(org.mockito.ArgumentMatchers.any());
+        verify(inventoryRepository, never()).save(any());
+        verify(inventoryAdjustmentRepository, never()).save(any());
     }
 
     @Test
     void adjustStock_throwsResourceNotFound_whenInventoryMissing() {
-        AdjustInventoryRequest request = new AdjustInventoryRequest(5);
+        AdjustInventoryRequest request = new AdjustInventoryRequest(5, null);
         when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> inventoryService.adjustStock(productId, request))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verify(inventoryRepository, org.mockito.Mockito.never()).save(org.mockito.ArgumentMatchers.any());
+        verify(inventoryRepository, never()).save(any());
+        verify(inventoryAdjustmentRepository, never()).save(any());
+    }
+
+    @Test
+    void getLowStockInventory_mapsEveryLowStockInventoryRow() {
+        when(inventoryRepository.findLowStock()).thenReturn(List.of(inventory));
+        when(inventoryMapper.toResponse(inventory)).thenReturn(inventoryResponse);
+
+        List<InventoryResponse> result = inventoryService.getLowStockInventory();
+
+        assertThat(result).containsExactly(inventoryResponse);
+    }
+
+    @Test
+    void getLowStockInventory_returnsEmptyList_whenNothingIsLow() {
+        when(inventoryRepository.findLowStock()).thenReturn(List.of());
+
+        List<InventoryResponse> result = inventoryService.getLowStockInventory();
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void updateLowStockThreshold_savesNewThreshold() {
+        SetLowStockThresholdRequest request = new SetLowStockThresholdRequest(8);
+        when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(inventory)).thenReturn(inventory);
+        when(inventoryMapper.toResponse(inventory)).thenReturn(inventoryResponse);
+
+        inventoryService.updateLowStockThreshold(productId, request);
+
+        ArgumentCaptor<Inventory> captor = ArgumentCaptor.forClass(Inventory.class);
+        verify(inventoryRepository).save(captor.capture());
+        assertThat(captor.getValue().getLowStockThreshold()).isEqualTo(8);
+    }
+
+    @Test
+    void updateLowStockThreshold_throwsResourceNotFound_whenInventoryMissing() {
+        SetLowStockThresholdRequest request = new SetLowStockThresholdRequest(8);
+        when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> inventoryService.updateLowStockThreshold(productId, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(inventoryRepository, never()).save(any());
+    }
+
+    @Test
+    void getInventoryHistory_returnsMappedPage() {
+        Pageable pageable = PageRequest.of(0, 20);
+        InventoryAdjustment adjustment = InventoryAdjustment.builder()
+                .product(product)
+                .quantityBefore(10)
+                .quantityAfter(15)
+                .reason("Restock")
+                .build();
+        InventoryAdjustmentResponse adjustmentResponse = InventoryAdjustmentResponse.builder()
+                .productId(productId)
+                .quantityBefore(10)
+                .quantityAfter(15)
+                .change(5)
+                .reason("Restock")
+                .build();
+
+        when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.of(inventory));
+        when(inventoryAdjustmentRepository.findByProductId(productId, pageable))
+                .thenReturn(new PageImpl<>(List.of(adjustment), pageable, 1));
+        when(inventoryMapper.toAdjustmentResponse(adjustment)).thenReturn(adjustmentResponse);
+
+        PageResponse<InventoryAdjustmentResponse> result = inventoryService.getInventoryHistory(productId, pageable);
+
+        assertThat(result.content()).containsExactly(adjustmentResponse);
+        assertThat(result.totalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void getInventoryHistory_throwsResourceNotFound_whenProductHasNoInventory() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> inventoryService.getInventoryHistory(productId, pageable))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(inventoryAdjustmentRepository, never()).findByProductId(any(), any());
     }
 }

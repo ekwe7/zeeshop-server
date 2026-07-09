@@ -1,6 +1,7 @@
 package com.ekwe_hub.zeeshopserver.productInventory.dto.request;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Changes stock on hand by a signed amount: a positive quantity increases
@@ -11,6 +12,10 @@ import jakarta.validation.constraints.NotNull;
 public record AdjustInventoryRequest(
 
         @NotNull(message = "Quantity is required")
-        Integer quantity
+        Integer quantity,
+
+        // Optional free-text note (e.g. "Restock", "Damaged"), kept in inventory history
+        @Size(max = 255, message = "Reason must not exceed 255 characters")
+        String reason
 ) {
 }

@@ -6,14 +6,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Builder
-public record InventoryResponse(
+public record InventoryAdjustmentResponse(
         UUID id,
         UUID productId,
         String productName,
         String sku,
-        int quantityOnHand,
-        int lowStockThreshold,
-        boolean lowStock,
-        LocalDateTime updatedAt
+        int quantityBefore,
+        int quantityAfter,
+        int change,
+        String reason,
+        String adjustedBy,
+        LocalDateTime adjustedAt
 ) {
 }

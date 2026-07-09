@@ -190,7 +190,7 @@ class ProductServiceImplTest {
     @Test
     void createProduct_resolvesCategoryAndUnit_andProvisionsInventory() {
         CreateProductRequest request = new CreateProductRequest(
-                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10);
+                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10, 5);
 
         when(productRepository.existsBySku("SKU-001")).thenReturn(false);
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
@@ -208,13 +208,14 @@ class ProductServiceImplTest {
         verify(inventoryRepository).save(inventoryCaptor.capture());
         assertThat(inventoryCaptor.getValue().getProduct()).isEqualTo(product);
         assertThat(inventoryCaptor.getValue().getQuantityOnHand()).isEqualTo(10);
+        assertThat(inventoryCaptor.getValue().getLowStockThreshold()).isEqualTo(5);
         verify(productRepository).save(product);
     }
 
     @Test
-    void createProduct_defaultsInitialQuantityToZero_whenOmitted() {
+    void createProduct_defaultsInitialQuantityAndThresholdToZero_whenOmitted() {
         CreateProductRequest request = new CreateProductRequest(
-                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, null);
+                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, null, null);
 
         when(productRepository.existsBySku("SKU-001")).thenReturn(false);
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
@@ -229,12 +230,13 @@ class ProductServiceImplTest {
         ArgumentCaptor<Inventory> inventoryCaptor = ArgumentCaptor.forClass(Inventory.class);
         verify(inventoryRepository).save(inventoryCaptor.capture());
         assertThat(inventoryCaptor.getValue().getQuantityOnHand()).isZero();
+        assertThat(inventoryCaptor.getValue().getLowStockThreshold()).isZero();
     }
 
     @Test
     void createProduct_throwsDuplicateResource_whenSkuTaken() {
         CreateProductRequest request = new CreateProductRequest(
-                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10);
+                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10, 5);
         when(productRepository.existsBySku("SKU-001")).thenReturn(true);
 
         assertThatThrownBy(() -> productService.createProduct(request))
@@ -247,7 +249,7 @@ class ProductServiceImplTest {
     @Test
     void createProduct_throwsResourceNotFound_whenCategoryMissing() {
         CreateProductRequest request = new CreateProductRequest(
-                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10);
+                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10, 5);
         when(productRepository.existsBySku("SKU-001")).thenReturn(false);
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
@@ -260,7 +262,7 @@ class ProductServiceImplTest {
     @Test
     void createProduct_throwsResourceNotFound_whenUnitMissing() {
         CreateProductRequest request = new CreateProductRequest(
-                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10);
+                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10, 5);
         when(productRepository.existsBySku("SKU-001")).thenReturn(false);
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
         when(unitRepository.findById(unitId)).thenReturn(Optional.empty());

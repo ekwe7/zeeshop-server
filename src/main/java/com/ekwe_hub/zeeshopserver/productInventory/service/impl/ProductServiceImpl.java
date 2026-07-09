@@ -67,6 +67,7 @@ public class ProductServiceImpl implements ProductService {
         Inventory inventory = Inventory.builder()
                 .product(product)
                 .quantityOnHand(request.initialQuantity() == null ? 0 : request.initialQuantity())
+                .lowStockThreshold(request.lowStockThreshold() == null ? 0 : request.lowStockThreshold())
                 .build();
         inventory = inventoryRepository.save(inventory);
 

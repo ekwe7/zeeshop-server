@@ -34,6 +34,10 @@ public record CreateProductRequest(
 
         // Defaults to 0 when omitted
         @Min(value = 0, message = "Initial quantity must not be negative")
-        Integer initialQuantity
+        Integer initialQuantity,
+
+        // Defaults to 0 (not tracked) when omitted
+        @Min(value = 0, message = "Low stock threshold must not be negative")
+        Integer lowStockThreshold
 ) {
 }

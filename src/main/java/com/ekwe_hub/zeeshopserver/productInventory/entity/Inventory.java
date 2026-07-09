@@ -34,4 +34,10 @@ public class Inventory extends AuditableEntity {
     @Column(name = "quantity_on_hand", nullable = false)
     @Builder.Default
     private int quantityOnHand = 0;
+
+    // Stock at/below this level is surfaced by the low-stock endpoint. Default 0
+    // means only a fully out-of-stock product (quantityOnHand == 0) is flagged.
+    @Column(name = "low_stock_threshold", nullable = false)
+    @Builder.Default
+    private int lowStockThreshold = 0;
 }

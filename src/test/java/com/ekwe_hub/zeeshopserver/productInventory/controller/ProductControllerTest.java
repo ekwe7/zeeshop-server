@@ -99,7 +99,7 @@ class ProductControllerTest {
     @Test
     void createProduct_returnsCreatedWithServiceResult() {
         CreateProductRequest request = new CreateProductRequest(
-                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10);
+                "Coke", "SKU-001", "Soft drink", BigDecimal.valueOf(1.5), categoryId, unitId, 10, 5);
         when(productService.createProduct(request)).thenReturn(productResponse);
 
         ResponseEntity<ApiResponse<ProductResponse>> response = productController.createProduct(request);
