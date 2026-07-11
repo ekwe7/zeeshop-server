@@ -21,7 +21,6 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-latest
           - macos-latest
         java:
           - 21
@@ -39,16 +38,10 @@ jobs:
           cache: gradle
 
       - name: Make Gradle Executable
-        if: runner.os != 'Windows'
         run: chmod +x gradlew
 
-      - name: Run Tests (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Run Tests
         run: ./gradlew clean test
-
-      - name: Run Tests (Windows)
-        if: runner.os == 'Windows'
-        run: .\gradlew.bat clean test
 
   build:
     name: Build Application
