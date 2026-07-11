@@ -9,10 +9,13 @@ import com.ekwe_hub.zeeshopserver.productInventory.dto.response.InventoryAdjustm
 import com.ekwe_hub.zeeshopserver.productInventory.dto.response.InventoryResponse;
 import com.ekwe_hub.zeeshopserver.productInventory.entity.Inventory;
 import com.ekwe_hub.zeeshopserver.productInventory.entity.InventoryAdjustment;
+import com.ekwe_hub.zeeshopserver.productInventory.event.LowStockDetectedEvent;
+import com.ekwe_hub.zeeshopserver.productInventory.event.StockAdjustedEvent;
 import com.ekwe_hub.zeeshopserver.productInventory.mapper.InventoryMapper;
 import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.InventoryAdjustmentRepository;
 import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.InventoryRepository;
 import com.ekwe_hub.zeeshopserver.productInventory.service.interfaces.InventoryService;
+import com.ekwe_hub.zeeshopserver.shared.domain.event.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +33,7 @@ public class InventoryServiceImpl implements InventoryService {
     private final InventoryRepository inventoryRepository;
     private final InventoryAdjustmentRepository inventoryAdjustmentRepository;
     private final InventoryMapper inventoryMapper;
+    private final DomainEventPublisher domainEventPublisher;
 
     @Override
     public List<InventoryResponse> getAllInventory() {
@@ -65,6 +69,12 @@ public class InventoryServiceImpl implements InventoryService {
                 .quantityAfter(quantityAfter)
                 .reason(request.reason())
                 .build());
+
+        domainEventPublisher.publish(new StockAdjustedEvent(productId, quantityBefore, quantityAfter, request.reason()));
+
+        if (quantityAfter <= inventory.getLowStockThreshold()) {
+            domainEventPublisher.publish(new LowStockDetectedEvent(productId, quantityAfter, inventory.getLowStockThreshold()));
+        }
 
         return inventoryMapper.toResponse(inventory);
     }

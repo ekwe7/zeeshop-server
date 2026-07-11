@@ -15,6 +15,7 @@ import com.ekwe_hub.zeeshopserver.productInventory.entity.Unit;
 import com.ekwe_hub.zeeshopserver.productInventory.mapper.InventoryMapper;
 import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.InventoryAdjustmentRepository;
 import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.InventoryRepository;
+import com.ekwe_hub.zeeshopserver.shared.domain.event.DomainEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,6 +50,9 @@ class InventoryServiceImplTest {
 
     @Mock
     private InventoryMapper inventoryMapper;
+
+    @Mock
+    private DomainEventPublisher domainEventPublisher;
 
     @InjectMocks
     private InventoryServiceImpl inventoryService;

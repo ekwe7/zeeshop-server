@@ -10,6 +10,9 @@ import com.ekwe_hub.zeeshopserver.productInventory.entity.Category;
 import com.ekwe_hub.zeeshopserver.productInventory.entity.Inventory;
 import com.ekwe_hub.zeeshopserver.productInventory.entity.Product;
 import com.ekwe_hub.zeeshopserver.productInventory.entity.Unit;
+import com.ekwe_hub.zeeshopserver.productInventory.event.ProductCreatedEvent;
+import com.ekwe_hub.zeeshopserver.productInventory.event.ProductDeletedEvent;
+import com.ekwe_hub.zeeshopserver.productInventory.event.ProductUpdatedEvent;
 import com.ekwe_hub.zeeshopserver.productInventory.mapper.ProductMapper;
 import com.ekwe_hub.zeeshopserver.productInventory.repository.impl.ProductSpecifications;
 import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.CategoryRepository;
@@ -17,6 +20,7 @@ import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.Invento
 import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.ProductRepository;
 import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.UnitRepository;
 import com.ekwe_hub.zeeshopserver.productInventory.service.interfaces.ProductService;
+import com.ekwe_hub.zeeshopserver.shared.domain.event.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +39,7 @@ public class ProductServiceImpl implements ProductService {
     private final UnitRepository unitRepository;
     private final InventoryRepository inventoryRepository;
     private final ProductMapper productMapper;
+    private final DomainEventPublisher domainEventPublisher;
 
     @Override
     public PageResponse<ProductResponse> getAllProducts(String name, UUID categoryId, UUID unitId, Pageable pageable) {
@@ -71,6 +76,8 @@ public class ProductServiceImpl implements ProductService {
                 .build();
         inventory = inventoryRepository.save(inventory);
 
+        domainEventPublisher.publish(new ProductCreatedEvent(product.getId(), product.getSku(), product.getName()));
+
         return productMapper.toResponse(product, inventory);
     }
 
@@ -91,6 +98,9 @@ public class ProductServiceImpl implements ProductService {
         );
 
         product = productRepository.save(product);
+
+        domainEventPublisher.publish(new ProductUpdatedEvent(product.getId(), product.getSku(), product.getName()));
+
         return productMapper.toResponse(product, findInventoryOrThrow(id));
     }
 
@@ -100,6 +110,8 @@ public class ProductServiceImpl implements ProductService {
         Product product = findProductOrThrow(id);
         inventoryRepository.findByProductId(id).ifPresent(inventoryRepository::delete);
         productRepository.delete(product);
+
+        domainEventPublisher.publish(new ProductDeletedEvent(product.getId(), product.getSku()));
     }
 
     private Product findProductOrThrow(UUID id) {
