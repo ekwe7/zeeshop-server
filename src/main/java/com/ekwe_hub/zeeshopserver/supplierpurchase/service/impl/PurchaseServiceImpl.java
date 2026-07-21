@@ -1,9 +1,7 @@
 package com.ekwe_hub.zeeshopserver.supplierpurchase.service.impl;
 
-import com.ekwe_hub.zeeshopserver.productinventory.dto.request.AdjustInventoryRequest;
-import com.ekwe_hub.zeeshopserver.productinventory.entity.Product;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.ProductRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.service.interfaces.InventoryService;
+import com.ekwe_hub.zeeshopserver.productInventory.entity.Product;
+import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.ProductRepository;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
 import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
@@ -44,7 +42,6 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final PurchaseItemRepository purchaseItemRepository;
     private final SupplierRepository supplierRepository;
     private final ProductRepository productRepository;
-    private final InventoryService inventoryService;
     private final PurchaseMapper purchaseMapper;
     private final DomainEventPublisher domainEventPublisher;
 
@@ -135,8 +132,6 @@ public class PurchaseServiceImpl implements PurchaseService {
 
             item.setQuantityReceived(newReceived);
             purchaseItemRepository.save(item);
-
-            inventoryService.adjustStock(item.getProduct().getId(), new AdjustInventoryRequest(line.quantity()));
 
             domainEventPublisher.publish(new StockReceivedEvent(purchase.getId(), item.getProduct().getId(), line.quantity()));
         }

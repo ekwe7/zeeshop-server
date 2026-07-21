@@ -1,6 +1,6 @@
 package com.ekwe_hub.zeeshopserver.supplierpurchase.mapper;
 
-import com.ekwe_hub.zeeshopserver.productinventory.entity.Product;
+import com.ekwe_hub.zeeshopserver.productInventory.entity.Product;
 import com.ekwe_hub.zeeshopserver.supplierpurchase.dto.request.CreatePurchaseRequest;
 import com.ekwe_hub.zeeshopserver.supplierpurchase.dto.request.PurchaseItemRequest;
 import com.ekwe_hub.zeeshopserver.supplierpurchase.dto.request.UpdatePurchaseRequest;

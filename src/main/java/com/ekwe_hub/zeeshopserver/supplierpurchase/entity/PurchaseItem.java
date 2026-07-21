@@ -1,6 +1,6 @@
 package com.ekwe_hub.zeeshopserver.supplierpurchase.entity;
 
-import com.ekwe_hub.zeeshopserver.productinventory.entity.Product;
+import com.ekwe_hub.zeeshopserver.productInventory.entity.Product;
 import com.ekwe_hub.zeeshopserver.shared.domain.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,9 +1,7 @@
 package com.ekwe_hub.zeeshopserver.supplierpurchase.service.impl;
 
-import com.ekwe_hub.zeeshopserver.productinventory.dto.request.AdjustInventoryRequest;
-import com.ekwe_hub.zeeshopserver.productinventory.entity.Product;
-import com.ekwe_hub.zeeshopserver.productinventory.repository.interfaces.ProductRepository;
-import com.ekwe_hub.zeeshopserver.productinventory.service.interfaces.InventoryService;
+import com.ekwe_hub.zeeshopserver.productInventory.entity.Product;
+import com.ekwe_hub.zeeshopserver.productInventory.repository.interfaces.ProductRepository;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException;
 import com.ekwe_hub.zeeshopserver.shared.domain.event.DomainEventPublisher;
@@ -61,9 +59,6 @@ class PurchaseServiceImplTest {
 
     @Mock
     private ProductRepository productRepository;
-
-    @Mock
-    private InventoryService inventoryService;
 
     @Mock
     private PurchaseMapper purchaseMapper;
@@ -249,7 +244,6 @@ class PurchaseServiceImplTest {
 
         assertThat(purchaseItem.getQuantityReceived()).isEqualTo(4);
         assertThat(purchase.getStatus()).isEqualTo(PurchaseStatus.PARTIALLY_RECEIVED);
-        verify(inventoryService).adjustStock(eq(productId), eq(new AdjustInventoryRequest(4)));
         verify(domainEventPublisher).publish(any(StockReceivedEvent.class));
         verify(domainEventPublisher, never()).publish(any(PurchaseCompletedEvent.class));
         verify(supplierRepository, never()).save(any());
@@ -286,7 +280,6 @@ class PurchaseServiceImplTest {
         assertThatThrownBy(() -> purchaseService.receiveStock(purchaseId, request))
                 .isInstanceOf(BusinessRuleViolationException.class);
 
-        verify(inventoryService, never()).adjustStock(any(), any());
         verify(purchaseRepository, never()).save(any());
     }
 
