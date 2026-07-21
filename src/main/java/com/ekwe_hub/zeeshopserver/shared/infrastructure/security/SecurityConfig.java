@@ -27,6 +27,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  *   token; Spring never creates an HttpSession.
  * - JwtAuthenticationFilter runs before the standard username/password
  *   filter since this API has no form login.
+ * - JwtAuthenticationEntryPoint handles unauthenticated requests to a
+ *   protected endpoint. Without it Spring falls back to
+ *   Http403ForbiddenEntryPoint (neither httpBasic() nor formLogin() is
+ *   configured to supply one), returning 403 for a missing/invalid token
+ *   instead of 401.
  */
 @Configuration
 @EnableWebSecurity
@@ -36,6 +41,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -55,6 +61,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
