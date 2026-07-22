@@ -45,14 +45,14 @@ public class ProductServiceImpl implements ProductService {
     public PageResponse<ProductResponse> getAllProducts(String name, UUID categoryId, UUID unitId, Pageable pageable) {
         Page<Product> products = productRepository.findAll(ProductSpecifications.matching(name, categoryId, unitId), pageable);
         Page<ProductResponse> responses = products
-                .map(product -> productMapper.toResponse(product, findInventoryOrThrow(product.getId())));
+                .map(product -> productMapper.toResponse(product, inventoryRepository.findByProductId(product.getId()).orElse(null)));
         return PageResponse.from(responses);
     }
 
     @Override
     public ProductResponse getProduct(UUID id) {
         Product product = findProductOrThrow(id);
-        return productMapper.toResponse(product, findInventoryOrThrow(id));
+        return productMapper.toResponse(product, inventoryRepository.findByProductId(id).orElse(null));
     }
 
     @Override
@@ -101,7 +101,7 @@ public class ProductServiceImpl implements ProductService {
 
         domainEventPublisher.publish(new ProductUpdatedEvent(product.getId(), product.getSku(), product.getName()));
 
-        return productMapper.toResponse(product, findInventoryOrThrow(id));
+        return productMapper.toResponse(product, inventoryRepository.findByProductId(id).orElse(null));
     }
 
     @Override
