@@ -36,6 +36,23 @@ public class Sale extends AuditableEntity {
     @Builder.Default
     private SaleStatus status = SaleStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type", nullable = false, length = 20)
+    @Builder.Default
+    private PaymentType paymentType = PaymentType.CASH;
+
+    @Column(name = "customer_name", length = 150)
+    private String customerName;
+
+    @Column(name = "customer_phone", length = 50)
+    private String customerPhone;
+
+    @Column(name = "customer_email", length = 150)
+    private String customerEmail;
+
+    @Column(name = "due_date")
+    private java.time.LocalDate dueDate;
+
     @Column(length = 500)
     private String notes;
 

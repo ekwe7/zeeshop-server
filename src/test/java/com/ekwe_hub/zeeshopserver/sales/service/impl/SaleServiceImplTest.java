@@ -96,6 +96,11 @@ class SaleServiceImplTest {
                 sale.getId(),
                 "SALE-001",
                 SaleStatus.PENDING,
+                com.ekwe_hub.zeeshopserver.sales.entity.PaymentType.CASH,
+                null,
+                null,
+                null,
+                null,
                 null,
                 new BigDecimal("1000.00"),
                 List.of(),
@@ -107,10 +112,10 @@ class SaleServiceImplTest {
     @Test
     void getAllSales_shouldReturnPageResponse() {
         Pageable pageable = PageRequest.of(0, 20);
-        when(saleRepository.search(null, pageable)).thenReturn(new PageImpl<>(List.of(sale)));
+        when(saleRepository.search(null, null, pageable)).thenReturn(new PageImpl<>(List.of(sale)));
         when(saleMapper.toResponse(sale)).thenReturn(saleResponse);
 
-        PageResponse<SaleResponse> result = saleService.getAllSales(null, pageable);
+        PageResponse<SaleResponse> result = saleService.getAllSales(null, null, pageable);
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.content().get(0).referenceNumber()).isEqualTo("SALE-001");
@@ -129,7 +134,7 @@ class SaleServiceImplTest {
     @Test
     void createSale_shouldCreateSaleAndPublishEvent() {
         SaleItemRequest itemReq = new SaleItemRequest(product.getId(), 2, new BigDecimal("500.00"));
-        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", "Notes", List.of(itemReq));
+        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", com.ekwe_hub.zeeshopserver.sales.entity.PaymentType.CASH, null, null, null, null, "Notes", List.of(itemReq));
 
         when(saleMapper.toEntity(createReq)).thenReturn(sale);
         when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
@@ -141,6 +146,16 @@ class SaleServiceImplTest {
         assertThat(result).isNotNull();
         verify(saleRepository).save(any(Sale.class));
         verify(domainEventPublisher).publish(any(SaleCreatedEvent.class));
+    }
+
+    @Test
+    void createCreditSale_withoutCustomerDetails_shouldThrowException() {
+        SaleItemRequest itemReq = new SaleItemRequest(product.getId(), 2, new BigDecimal("500.00"));
+        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", com.ekwe_hub.zeeshopserver.sales.entity.PaymentType.CREDIT, null, null, null, null, "Notes", List.of(itemReq));
+
+        assertThatThrownBy(() -> saleService.createSale(createReq))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .hasMessageContaining("Customer identification details");
     }
 
     @Test

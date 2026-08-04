@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface SaleService {
 
-    PageResponse<SaleResponse> getAllSales(SaleStatus status, Pageable pageable);
+    PageResponse<SaleResponse> getAllSales(SaleStatus status, com.ekwe_hub.zeeshopserver.sales.entity.PaymentType paymentType, Pageable pageable);
 
     SaleResponse getSale(UUID id);
 

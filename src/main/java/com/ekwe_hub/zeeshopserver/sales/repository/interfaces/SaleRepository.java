@@ -14,6 +14,6 @@ import java.util.UUID;
 @Repository
 public interface SaleRepository extends JpaRepository<Sale, UUID> {
 
-    @Query("SELECT s FROM Sale s WHERE (:status IS NULL OR s.status = :status)")
-    Page<Sale> search(@Param("status") SaleStatus status, Pageable pageable);
+    @Query("SELECT s FROM Sale s WHERE (:status IS NULL OR s.status = :status) AND (:paymentType IS NULL OR s.paymentType = :paymentType)")
+    Page<Sale> search(@Param("status") SaleStatus status, @Param("paymentType") com.ekwe_hub.zeeshopserver.sales.entity.PaymentType paymentType, Pageable pageable);
 }

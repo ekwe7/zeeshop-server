@@ -41,8 +41,8 @@ public class SaleServiceImpl implements SaleService {
     private final DomainEventPublisher domainEventPublisher;
 
     @Override
-    public PageResponse<SaleResponse> getAllSales(SaleStatus status, Pageable pageable) {
-        Page<SaleResponse> responses = saleRepository.search(status, pageable)
+    public PageResponse<SaleResponse> getAllSales(SaleStatus status, com.ekwe_hub.zeeshopserver.sales.entity.PaymentType paymentType, Pageable pageable) {
+        Page<SaleResponse> responses = saleRepository.search(status, paymentType, pageable)
                 .map(saleMapper::toResponse);
         return PageResponse.from(responses);
     }
@@ -55,6 +55,14 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public SaleResponse createSale(CreateSaleRequest request) {
+        if (request.paymentType() == com.ekwe_hub.zeeshopserver.sales.entity.PaymentType.CREDIT) {
+            if ((request.customerName() == null || request.customerName().isBlank()) &&
+                (request.customerPhone() == null || request.customerPhone().isBlank()) &&
+                (request.customerEmail() == null || request.customerEmail().isBlank())) {
+                throw new BusinessRuleViolationException("Customer identification details (name, phone, or email) are required for Credit sales");
+            }
+        }
+
         Sale sale = saleMapper.toEntity(request);
 
         BigDecimal totalAmount = BigDecimal.ZERO;

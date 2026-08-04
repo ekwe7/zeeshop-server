@@ -40,8 +40,9 @@ public class SaleController {
     @PreAuthorize("hasAuthority('SALES_READ')")
     public ResponseEntity<ApiResponse<PageResponse<SaleResponse>>> getAllSales(
             @RequestParam(required = false) SaleStatus status,
+            @RequestParam(required = false) com.ekwe_hub.zeeshopserver.sales.entity.PaymentType paymentType,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(saleService.getAllSales(status, pageable)));
+        return ResponseEntity.ok(ApiResponse.success(saleService.getAllSales(status, paymentType, pageable)));
     }
 
     @GetMapping("/{id}")

@@ -80,7 +80,7 @@ public class ReceiptServiceImpl implements ReceiptService {
             receiptHeading.setSpacingAfter(15);
             document.add(receiptHeading);
 
-            // Metadata Table (Ref Number, Date, Status)
+            // Metadata Table (Ref Number, Date, Status, Payment Type, Customer Details)
             PdfPTable metaTable = new PdfPTable(2);
             metaTable.setWidthPercentage(100);
             metaTable.setWidths(new float[]{50f, 50f});
@@ -88,7 +88,16 @@ public class ReceiptServiceImpl implements ReceiptService {
             PdfPCell leftCell = new PdfPCell();
             leftCell.setBorder(PdfPCell.NO_BORDER);
             leftCell.addElement(new Paragraph("Receipt Ref: " + (sale.getReferenceNumber() != null ? sale.getReferenceNumber() : "N/A"), normalFont));
+            leftCell.addElement(new Paragraph("Payment Type: " + (sale.getPaymentType() != null ? sale.getPaymentType().name() : "CASH"), normalFont));
             leftCell.addElement(new Paragraph("Status: " + sale.getStatus().name(), normalFont));
+
+            if (sale.getCustomerName() != null || sale.getCustomerPhone() != null || sale.getCustomerEmail() != null) {
+                StringBuilder custInfo = new StringBuilder("Customer: ");
+                if (sale.getCustomerName() != null) custInfo.append(sale.getCustomerName());
+                if (sale.getCustomerPhone() != null) custInfo.append(" (").append(sale.getCustomerPhone()).append(")");
+                if (sale.getCustomerEmail() != null) custInfo.append(" - ").append(sale.getCustomerEmail());
+                leftCell.addElement(new Paragraph(custInfo.toString(), normalFont));
+            }
 
             PdfPCell rightCell = new PdfPCell();
             rightCell.setBorder(PdfPCell.NO_BORDER);
@@ -97,6 +106,12 @@ public class ReceiptServiceImpl implements ReceiptService {
             Paragraph datePara = new Paragraph("Date: " + formattedDate, normalFont);
             datePara.setAlignment(Element.ALIGN_RIGHT);
             rightCell.addElement(datePara);
+
+            if (sale.getDueDate() != null) {
+                Paragraph dueDatePara = new Paragraph("Due Date: " + sale.getDueDate(), normalFont);
+                dueDatePara.setAlignment(Element.ALIGN_RIGHT);
+                rightCell.addElement(dueDatePara);
+            }
 
             metaTable.addCell(leftCell);
             metaTable.addCell(rightCell);

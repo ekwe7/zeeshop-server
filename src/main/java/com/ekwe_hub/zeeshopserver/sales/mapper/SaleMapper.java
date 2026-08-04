@@ -6,6 +6,7 @@ import com.ekwe_hub.zeeshopserver.sales.dto.request.SaleItemRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.UpdateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.response.SaleItemResponse;
 import com.ekwe_hub.zeeshopserver.sales.dto.response.SaleResponse;
+import com.ekwe_hub.zeeshopserver.sales.entity.PaymentType;
 import com.ekwe_hub.zeeshopserver.sales.entity.Sale;
 import com.ekwe_hub.zeeshopserver.sales.entity.SaleItem;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,11 @@ public class SaleMapper {
     public Sale toEntity(CreateSaleRequest request) {
         return Sale.builder()
                 .referenceNumber(request.referenceNumber())
+                .paymentType(request.paymentType() != null ? request.paymentType() : PaymentType.CASH)
+                .customerName(request.customerName())
+                .customerPhone(request.customerPhone())
+                .customerEmail(request.customerEmail())
+                .dueDate(request.dueDate())
                 .notes(request.notes())
                 .build();
     }
@@ -35,6 +41,21 @@ public class SaleMapper {
         if (request.referenceNumber() != null) {
             sale.setReferenceNumber(request.referenceNumber());
         }
+        if (request.paymentType() != null) {
+            sale.setPaymentType(request.paymentType());
+        }
+        if (request.customerName() != null) {
+            sale.setCustomerName(request.customerName());
+        }
+        if (request.customerPhone() != null) {
+            sale.setCustomerPhone(request.customerPhone());
+        }
+        if (request.customerEmail() != null) {
+            sale.setCustomerEmail(request.customerEmail());
+        }
+        if (request.dueDate() != null) {
+            sale.setDueDate(request.dueDate());
+        }
         if (request.notes() != null) {
             sale.setNotes(request.notes());
         }
@@ -45,6 +66,11 @@ public class SaleMapper {
                 sale.getId(),
                 sale.getReferenceNumber(),
                 sale.getStatus(),
+                sale.getPaymentType(),
+                sale.getCustomerName(),
+                sale.getCustomerPhone(),
+                sale.getCustomerEmail(),
+                sale.getDueDate(),
                 sale.getNotes(),
                 sale.getTotalAmount(),
                 sale.getItems().stream().map(this::toItemResponse).toList(),
