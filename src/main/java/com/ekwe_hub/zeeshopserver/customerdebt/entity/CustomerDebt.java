@@ -29,20 +29,31 @@ import java.time.LocalDate;
 public class CustomerDebt extends AuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sale_id", nullable = false)
     private Sale sale;
 
     @Column(name = "customer_name", nullable = false, length = 150)
     private String customerName;
 
-    @Column(name = "customer_phone", length = 50)
+    @Column(name = "customer_phone", length = 16)
     private String customerPhone;
 
     @Column(name = "customer_email", length = 150)
     private String customerEmail;
 
+    @Column(name = "initial_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal initialAmount;
+
     @Column(name = "amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
+
+    @Column(name = "paid_amount", nullable = false, precision = 12, scale = 2)
+    @Builder.Default
+    private BigDecimal paidAmount = BigDecimal.ZERO;
 
     @Column(name = "due_date")
     private LocalDate dueDate;
