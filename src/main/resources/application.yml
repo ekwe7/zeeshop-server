@@ -3,6 +3,10 @@ app:
   # admin password below — see StartupSecretsValidator. Every other deployment must
   # set APP_ENV (e.g. staging, production) AND override JWT_SECRET / ADMIN_PASSWORD.
   environment: ${APP_ENV:local}
+  shop:
+    name: ${SHOP_NAME:ZeeShop Store}
+    address: ${SHOP_ADDRESS:123 Commerce Way, Business District, Lagos}
+    phone: ${SHOP_PHONE:+234 8133900781}
 
 spring:
   application:

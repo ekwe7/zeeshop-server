@@ -4,6 +4,7 @@ import com.ekwe_hub.zeeshopserver.sales.dto.request.CreateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.UpdateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.response.SaleResponse;
 import com.ekwe_hub.zeeshopserver.sales.entity.SaleStatus;
+import com.ekwe_hub.zeeshopserver.sales.service.interfaces.ReceiptService;
 import com.ekwe_hub.zeeshopserver.sales.service.interfaces.SaleService;
 import com.ekwe_hub.zeeshopserver.shared.api.response.ApiResponse;
 import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
@@ -33,6 +34,7 @@ import java.util.UUID;
 public class SaleController {
 
     private final SaleService saleService;
+    private final ReceiptService receiptService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('SALES_READ')")
@@ -82,5 +84,15 @@ public class SaleController {
     public ResponseEntity<ApiResponse<SaleResponse>> cancelSale(@PathVariable UUID id) {
         SaleResponse updated = saleService.cancelSale(id);
         return ResponseEntity.ok(ApiResponse.success(updated, "Sale cancelled successfully"));
+    }
+
+    @GetMapping("/{id}/receipt")
+    @PreAuthorize("hasAuthority('SALES_READ')")
+    public ResponseEntity<byte[]> getSaleReceipt(@PathVariable UUID id) {
+        byte[] pdfContent = receiptService.generateReceiptPdf(id);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"receipt-" + id + ".pdf\"")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdfContent);
     }
 }
