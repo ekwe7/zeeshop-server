@@ -183,12 +183,14 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void getProduct_throwsResourceNotFound_whenInventoryMissing() {
+    void getProduct_returnsResponse_whenInventoryMissing() {
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
         when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.empty());
+        when(productMapper.toResponse(product, null)).thenReturn(productResponse);
 
-        assertThatThrownBy(() -> productService.getProduct(productId))
-                .isInstanceOf(ResourceNotFoundException.class);
+        ProductResponse result = productService.getProduct(productId);
+
+        assertThat(result).isEqualTo(productResponse);
     }
 
     @Test

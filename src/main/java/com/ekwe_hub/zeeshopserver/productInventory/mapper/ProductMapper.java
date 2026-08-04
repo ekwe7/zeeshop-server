@@ -41,7 +41,7 @@ public class ProductMapper {
                 .price(product.getPrice())
                 .categoryName(product.getCategory().getName())
                 .unitName(product.getUnit().getName())
-                .quantityOnHand(inventory.getQuantityOnHand())
+                .quantityOnHand(inventory == null ? 0 : inventory.getQuantityOnHand())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();
