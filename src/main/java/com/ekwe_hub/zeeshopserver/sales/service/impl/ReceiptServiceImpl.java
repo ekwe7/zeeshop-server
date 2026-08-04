@@ -148,21 +148,17 @@ public class ReceiptServiceImpl implements ReceiptService {
             table.setSpacingAfter(15);
             document.add(table);
 
-            // Total Amount Section
+            // Total Breakdown Section (Subtotal, Discount, Tax, Total)
             PdfPTable totalTable = new PdfPTable(2);
             totalTable.setWidthPercentage(100);
             totalTable.setWidths(new float[]{70f, 30f});
 
-            PdfPCell totalLabelCell = new PdfPCell(new Phrase("Total Amount Paid:", totalFont));
-            totalLabelCell.setBorder(PdfPCell.NO_BORDER);
-            totalLabelCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            addSummaryRow(totalTable, "Subtotal:", formatAmount(sale.getSubtotalAmount()), normalFont);
+            if (sale.getDiscountAmount() != null && sale.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
+                addSummaryRow(totalTable, "Discount:", "-" + formatAmount(sale.getDiscountAmount()), normalFont);
+            }
+            addSummaryRow(totalTable, "Total Amount:", formatAmount(sale.getTotalAmount()), totalFont);
 
-            PdfPCell totalValueCell = new PdfPCell(new Phrase(formatAmount(sale.getTotalAmount()), totalFont));
-            totalValueCell.setBorder(PdfPCell.NO_BORDER);
-            totalValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-
-            totalTable.addCell(totalLabelCell);
-            totalTable.addCell(totalValueCell);
             totalTable.setSpacingAfter(25);
             document.add(totalTable);
 
@@ -177,6 +173,19 @@ public class ReceiptServiceImpl implements ReceiptService {
         }
 
         return baos.toByteArray();
+    }
+
+    private void addSummaryRow(PdfPTable table, String label, String value, Font font) {
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, font));
+        labelCell.setBorder(PdfPCell.NO_BORDER);
+        labelCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+        PdfPCell valueCell = new PdfPCell(new Phrase(value, font));
+        valueCell.setBorder(PdfPCell.NO_BORDER);
+        valueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+        table.addCell(labelCell);
+        table.addCell(valueCell);
     }
 
     private void addHeaderCell(PdfPTable table, String text, Font font) {

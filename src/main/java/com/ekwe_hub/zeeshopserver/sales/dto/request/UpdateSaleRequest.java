@@ -2,6 +2,8 @@ package com.ekwe_hub.zeeshopserver.sales.dto.request;
 
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
+
 public record UpdateSaleRequest(
         @Size(max = 100, message = "Reference number cannot exceed 100 characters")
         String referenceNumber,
@@ -18,6 +20,9 @@ public record UpdateSaleRequest(
         String customerEmail,
 
         java.time.LocalDate dueDate,
+
+        @jakarta.validation.constraints.DecimalMin(value = "0.0", message = "Discount amount cannot be negative")
+        BigDecimal discountAmount,
 
         @Size(max = 500, message = "Notes cannot exceed 500 characters")
         String notes

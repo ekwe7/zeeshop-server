@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface SaleService {
 
-    PageResponse<SaleResponse> getAllSales(SaleStatus status, PaymentType paymentType, Pageable pageable);
+    PageResponse<SaleResponse> getAllSales(SaleStatus status, PaymentType paymentType, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, Pageable pageable);
 
     SaleResponse getSale(UUID id);
 

@@ -15,6 +15,13 @@ import java.util.UUID;
 @Repository
 public interface SaleRepository extends JpaRepository<Sale, UUID> {
 
-    @Query("SELECT s FROM Sale s WHERE (:status IS NULL OR s.status = :status) AND (:paymentType IS NULL OR s.paymentType = :paymentType)")
-    Page<Sale> search(@Param("status") SaleStatus status, @Param("paymentType") PaymentType paymentType, Pageable pageable);
+    @Query("SELECT s FROM Sale s WHERE (:status IS NULL OR s.status = :status) " +
+           "AND (:paymentType IS NULL OR s.paymentType = :paymentType) " +
+           "AND (:startDate IS NULL OR s.createdAt >= :startDate) " +
+           "AND (:endDate IS NULL OR s.createdAt <= :endDate)")
+    Page<Sale> search(@Param("status") SaleStatus status,
+                      @Param("paymentType") PaymentType paymentType,
+                      @Param("startDate") java.time.LocalDateTime startDate,
+                      @Param("endDate") java.time.LocalDateTime endDate,
+                      Pageable pageable);
 }

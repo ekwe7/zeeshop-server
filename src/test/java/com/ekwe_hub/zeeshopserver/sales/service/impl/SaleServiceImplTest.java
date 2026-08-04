@@ -103,6 +103,8 @@ class SaleServiceImplTest {
                 null,
                 null,
                 new BigDecimal("1000.00"),
+                BigDecimal.ZERO,
+                new BigDecimal("1000.00"),
                 List.of(),
                 null,
                 null
@@ -112,10 +114,10 @@ class SaleServiceImplTest {
     @Test
     void getAllSales_shouldReturnPageResponse() {
         Pageable pageable = PageRequest.of(0, 20);
-        when(saleRepository.search(null, null, pageable)).thenReturn(new PageImpl<>(List.of(sale)));
+        when(saleRepository.search(null, null, null, null, pageable)).thenReturn(new PageImpl<>(List.of(sale)));
         when(saleMapper.toResponse(sale)).thenReturn(saleResponse);
 
-        PageResponse<SaleResponse> result = saleService.getAllSales(null, null, pageable);
+        PageResponse<SaleResponse> result = saleService.getAllSales(null, null, null, null, pageable);
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.content().get(0).referenceNumber()).isEqualTo("SALE-001");
@@ -134,7 +136,7 @@ class SaleServiceImplTest {
     @Test
     void createSale_shouldCreateSaleAndPublishEvent() {
         SaleItemRequest itemReq = new SaleItemRequest(product.getId(), 2, new BigDecimal("500.00"));
-        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", PaymentType.CASH, null, null, null, null, "Notes", List.of(itemReq));
+        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", PaymentType.CASH, null, null, null, null, BigDecimal.ZERO, "Notes", List.of(itemReq));
 
         when(saleMapper.toEntity(createReq)).thenReturn(sale);
         when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
@@ -151,7 +153,7 @@ class SaleServiceImplTest {
     @Test
     void createCreditSale_withoutCustomerDetails_shouldThrowException() {
         SaleItemRequest itemReq = new SaleItemRequest(product.getId(), 2, new BigDecimal("500.00"));
-        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", PaymentType.CREDIT, null, null, null, null, "Notes", List.of(itemReq));
+        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", PaymentType.CREDIT, null, null, null, null, BigDecimal.ZERO, "Notes", List.of(itemReq));
 
         assertThatThrownBy(() -> saleService.createSale(createReq))
                 .isInstanceOf(BusinessRuleViolationException.class)

@@ -18,6 +18,8 @@ public record SaleResponse(
         String customerEmail,
         java.time.LocalDate dueDate,
         String notes,
+        BigDecimal subtotalAmount,
+        BigDecimal discountAmount,
         BigDecimal totalAmount,
         List<SaleItemResponse> items,
         LocalDateTime createdAt,
