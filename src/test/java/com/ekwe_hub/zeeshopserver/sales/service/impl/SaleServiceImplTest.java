@@ -13,13 +13,13 @@ import com.ekwe_hub.zeeshopserver.sales.dto.request.CreateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.SaleItemRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.UpdateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.response.SaleResponse;
+import com.ekwe_hub.zeeshopserver.sales.entity.PaymentType;
 import com.ekwe_hub.zeeshopserver.sales.entity.Sale;
 import com.ekwe_hub.zeeshopserver.sales.entity.SaleStatus;
 import com.ekwe_hub.zeeshopserver.sales.event.SaleCompletedEvent;
 import com.ekwe_hub.zeeshopserver.sales.event.SaleCreatedEvent;
 import com.ekwe_hub.zeeshopserver.sales.mapper.SaleMapper;
 import com.ekwe_hub.zeeshopserver.sales.repository.interfaces.SaleRepository;
-
 import com.ekwe_hub.zeeshopserver.shared.api.exception.BusinessRuleViolationException;
 import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
 import com.ekwe_hub.zeeshopserver.shared.domain.event.DomainEventPublisher;
@@ -96,7 +96,7 @@ class SaleServiceImplTest {
                 sale.getId(),
                 "SALE-001",
                 SaleStatus.PENDING,
-                com.ekwe_hub.zeeshopserver.sales.entity.PaymentType.CASH,
+                PaymentType.CASH,
                 null,
                 null,
                 null,
@@ -134,7 +134,7 @@ class SaleServiceImplTest {
     @Test
     void createSale_shouldCreateSaleAndPublishEvent() {
         SaleItemRequest itemReq = new SaleItemRequest(product.getId(), 2, new BigDecimal("500.00"));
-        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", com.ekwe_hub.zeeshopserver.sales.entity.PaymentType.CASH, null, null, null, null, "Notes", List.of(itemReq));
+        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", PaymentType.CASH, null, null, null, null, "Notes", List.of(itemReq));
 
         when(saleMapper.toEntity(createReq)).thenReturn(sale);
         when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
@@ -151,7 +151,7 @@ class SaleServiceImplTest {
     @Test
     void createCreditSale_withoutCustomerDetails_shouldThrowException() {
         SaleItemRequest itemReq = new SaleItemRequest(product.getId(), 2, new BigDecimal("500.00"));
-        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", com.ekwe_hub.zeeshopserver.sales.entity.PaymentType.CREDIT, null, null, null, null, "Notes", List.of(itemReq));
+        CreateSaleRequest createReq = new CreateSaleRequest("SALE-001", PaymentType.CREDIT, null, null, null, null, "Notes", List.of(itemReq));
 
         assertThatThrownBy(() -> saleService.createSale(createReq))
                 .isInstanceOf(BusinessRuleViolationException.class)

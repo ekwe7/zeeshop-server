@@ -8,6 +8,7 @@ import com.ekwe_hub.zeeshopserver.sales.dto.request.CreateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.SaleItemRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.UpdateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.response.SaleResponse;
+import com.ekwe_hub.zeeshopserver.sales.entity.PaymentType;
 import com.ekwe_hub.zeeshopserver.sales.entity.Sale;
 import com.ekwe_hub.zeeshopserver.sales.entity.SaleItem;
 import com.ekwe_hub.zeeshopserver.sales.entity.SaleStatus;
@@ -41,7 +42,7 @@ public class SaleServiceImpl implements SaleService {
     private final DomainEventPublisher domainEventPublisher;
 
     @Override
-    public PageResponse<SaleResponse> getAllSales(SaleStatus status, com.ekwe_hub.zeeshopserver.sales.entity.PaymentType paymentType, Pageable pageable) {
+    public PageResponse<SaleResponse> getAllSales(SaleStatus status, PaymentType paymentType, Pageable pageable) {
         Page<SaleResponse> responses = saleRepository.search(status, paymentType, pageable)
                 .map(saleMapper::toResponse);
         return PageResponse.from(responses);
@@ -55,7 +56,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public SaleResponse createSale(CreateSaleRequest request) {
-        if (request.paymentType() == com.ekwe_hub.zeeshopserver.sales.entity.PaymentType.CREDIT) {
+        if (request.paymentType() == PaymentType.CREDIT) {
             if ((request.customerName() == null || request.customerName().isBlank()) &&
                 (request.customerPhone() == null || request.customerPhone().isBlank()) &&
                 (request.customerEmail() == null || request.customerEmail().isBlank())) {

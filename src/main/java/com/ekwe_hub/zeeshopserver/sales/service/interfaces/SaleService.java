@@ -3,6 +3,7 @@ package com.ekwe_hub.zeeshopserver.sales.service.interfaces;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.CreateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.UpdateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.response.SaleResponse;
+import com.ekwe_hub.zeeshopserver.sales.entity.PaymentType;
 import com.ekwe_hub.zeeshopserver.sales.entity.SaleStatus;
 import com.ekwe_hub.zeeshopserver.shared.api.response.PageResponse;
 import org.springframework.data.domain.Pageable;
@@ -11,7 +12,7 @@ import java.util.UUID;
 
 public interface SaleService {
 
-    PageResponse<SaleResponse> getAllSales(SaleStatus status, com.ekwe_hub.zeeshopserver.sales.entity.PaymentType paymentType, Pageable pageable);
+    PageResponse<SaleResponse> getAllSales(SaleStatus status, PaymentType paymentType, Pageable pageable);
 
     SaleResponse getSale(UUID id);
 

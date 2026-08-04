@@ -3,6 +3,7 @@ package com.ekwe_hub.zeeshopserver.sales.controller;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.CreateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.request.UpdateSaleRequest;
 import com.ekwe_hub.zeeshopserver.sales.dto.response.SaleResponse;
+import com.ekwe_hub.zeeshopserver.sales.entity.PaymentType;
 import com.ekwe_hub.zeeshopserver.sales.entity.SaleStatus;
 import com.ekwe_hub.zeeshopserver.sales.service.interfaces.ReceiptService;
 import com.ekwe_hub.zeeshopserver.sales.service.interfaces.SaleService;
@@ -40,7 +41,7 @@ public class SaleController {
     @PreAuthorize("hasAuthority('SALES_READ')")
     public ResponseEntity<ApiResponse<PageResponse<SaleResponse>>> getAllSales(
             @RequestParam(required = false) SaleStatus status,
-            @RequestParam(required = false) com.ekwe_hub.zeeshopserver.sales.entity.PaymentType paymentType,
+            @RequestParam(required = false) PaymentType paymentType,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success(saleService.getAllSales(status, paymentType, pageable)));
     }
