@@ -32,6 +32,7 @@ import java.util.UUID;
 public class ReceiptServiceImpl implements ReceiptService {
 
     private final SaleRepository saleRepository;
+    private final com.ekwe_hub.zeeshopserver.shared.domain.event.DomainEventPublisher domainEventPublisher;
 
     @Value("${app.shop.name:ZeeShop Store}")
     private String shopName;
@@ -168,6 +169,7 @@ public class ReceiptServiceImpl implements ReceiptService {
             document.add(footerPara);
 
             document.close();
+            domainEventPublisher.publish(new com.ekwe_hub.zeeshopserver.sales.event.ReceiptGeneratedEvent(sale.getId(), sale.getReferenceNumber()));
         } catch (Exception e) {
             throw new RuntimeException("Error occurred while generating PDF receipt", e);
         }

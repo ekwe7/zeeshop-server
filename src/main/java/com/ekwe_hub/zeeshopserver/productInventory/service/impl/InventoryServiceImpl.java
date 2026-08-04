@@ -72,6 +72,15 @@ public class InventoryServiceImpl implements InventoryService {
 
         domainEventPublisher.publish(new StockAdjustedEvent(productId, quantityBefore, quantityAfter, request.reason()));
 
+        if (request.quantity() < 0) {
+            domainEventPublisher.publish(new com.ekwe_hub.zeeshopserver.productInventory.event.StockReducedEvent(
+                    productId,
+                    Math.abs(request.quantity()),
+                    quantityAfter,
+                    request.reason()
+            ));
+        }
+
         if (quantityAfter <= inventory.getLowStockThreshold()) {
             domainEventPublisher.publish(new LowStockDetectedEvent(productId, quantityAfter, inventory.getLowStockThreshold()));
         }
