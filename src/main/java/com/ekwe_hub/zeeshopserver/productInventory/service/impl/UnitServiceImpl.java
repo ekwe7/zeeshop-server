@@ -36,7 +36,7 @@ public class UnitServiceImpl implements UnitService {
 
     @Override
     public UnitResponse getUnit(UUID id) {
-        return unitMapper.toResponse(findUnitOrThrow(id));
+        return unitMapper.toResponse(findUnit(id));
     }
 
     @Override
@@ -57,7 +57,7 @@ public class UnitServiceImpl implements UnitService {
     @Override
     @Transactional
     public UnitResponse updateUnit(UUID id, UpdateUnitRequest request) {
-        Unit unit = findUnitOrThrow(id);
+        Unit unit = findUnit(id);
 
         if (unitRepository.existsByNameAndIdNot(request.name(), id)) {
             throw new DuplicateResourceException("Unit", "name", request.name());
@@ -74,7 +74,7 @@ public class UnitServiceImpl implements UnitService {
     @Override
     @Transactional
     public void deleteUnit(UUID id) {
-        Unit unit = findUnitOrThrow(id);
+        Unit unit = findUnit(id);
 
         if (productRepository.existsByUnitId(id)) {
             throw new BusinessRuleViolationException(
@@ -84,7 +84,7 @@ public class UnitServiceImpl implements UnitService {
         unitRepository.delete(unit);
     }
 
-    private Unit findUnitOrThrow(UUID id) {
+    private Unit findUnit(UUID id) {
         return unitRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Unit", id));
     }

@@ -50,7 +50,7 @@ public class SaleServiceImpl implements SaleService {
 
     @Override
     public SaleResponse getSale(UUID id) {
-        return saleMapper.toResponse(findSaleOrThrow(id));
+        return saleMapper.toResponse(findSale(id));
     }
 
     @Override
@@ -68,7 +68,7 @@ public class SaleServiceImpl implements SaleService {
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (SaleItemRequest itemRequest : request.items()) {
-            Product product = findProductOrThrow(itemRequest.productId());
+            Product product = findProduct(itemRequest.productId());
             SaleItem item = saleMapper.toItemEntity(itemRequest, product, sale);
             sale.getItems().add(item);
             totalAmount = totalAmount.add(itemRequest.unitPrice().multiply(BigDecimal.valueOf(itemRequest.quantity())));
@@ -85,7 +85,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public SaleResponse updateSale(UUID id, UpdateSaleRequest request) {
-        Sale sale = findSaleOrThrow(id);
+        Sale sale = findSale(id);
 
         if (sale.getStatus() != SaleStatus.PENDING) {
             throw new BusinessRuleViolationException(
@@ -100,7 +100,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public void deleteSale(UUID id) {
-        Sale sale = findSaleOrThrow(id);
+        Sale sale = findSale(id);
 
         if (sale.getStatus() == SaleStatus.COMPLETED) {
             throw new BusinessRuleViolationException("Cannot delete a completed sale");
@@ -112,7 +112,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public SaleResponse completeSale(UUID id) {
-        Sale sale = findSaleOrThrow(id);
+        Sale sale = findSale(id);
 
         if (sale.getStatus() != SaleStatus.PENDING) {
             throw new BusinessRuleViolationException(
@@ -141,7 +141,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public SaleResponse cancelSale(UUID id) {
-        Sale sale = findSaleOrThrow(id);
+        Sale sale = findSale(id);
 
         if (sale.getStatus() != SaleStatus.PENDING) {
             throw new BusinessRuleViolationException(
@@ -153,12 +153,12 @@ public class SaleServiceImpl implements SaleService {
         return saleMapper.toResponse(sale);
     }
 
-    private Sale findSaleOrThrow(UUID id) {
+    private Sale findSale(UUID id) {
         return saleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale", id));
     }
 
-    private Product findProductOrThrow(UUID id) {
+    private Product findProduct(UUID id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
     }

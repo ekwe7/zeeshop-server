@@ -54,19 +54,19 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     @Override
     public PurchaseResponse getPurchase(UUID id) {
-        return purchaseMapper.toResponse(findPurchaseOrThrow(id));
+        return purchaseMapper.toResponse(findPurchase(id));
     }
 
     @Override
     @Transactional
     public PurchaseResponse createPurchase(CreatePurchaseRequest request) {
-        Supplier supplier = findSupplierOrThrow(request.supplierId());
+        Supplier supplier = findSupplier(request.supplierId());
 
         Purchase purchase = purchaseMapper.toEntity(request, supplier);
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (PurchaseItemRequest itemRequest : request.items()) {
-            Product product = findProductOrThrow(itemRequest.productId());
+            Product product = findProduct(itemRequest.productId());
             PurchaseItem item = purchaseMapper.toItemEntity(itemRequest, product, purchase);
             purchase.getItems().add(item);
             totalAmount = totalAmount.add(itemRequest.unitCost().multiply(BigDecimal.valueOf(itemRequest.quantityOrdered())));
@@ -83,7 +83,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public PurchaseResponse updatePurchase(UUID id, UpdatePurchaseRequest request) {
-        Purchase purchase = findPurchaseOrThrow(id);
+        Purchase purchase = findPurchase(id);
 
         if (purchase.getStatus() == PurchaseStatus.COMPLETED || purchase.getStatus() == PurchaseStatus.CANCELLED) {
             throw new BusinessRuleViolationException(
@@ -98,7 +98,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public void deletePurchase(UUID id) {
-        Purchase purchase = findPurchaseOrThrow(id);
+        Purchase purchase = findPurchase(id);
 
         if (purchase.getStatus() == PurchaseStatus.PARTIALLY_RECEIVED || purchase.getStatus() == PurchaseStatus.COMPLETED) {
             throw new BusinessRuleViolationException(
@@ -111,7 +111,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public PurchaseResponse receiveStock(UUID id, ReceiveStockRequest request) {
-        Purchase purchase = findPurchaseOrThrow(id);
+        Purchase purchase = findPurchase(id);
 
         if (purchase.getStatus() == PurchaseStatus.COMPLETED || purchase.getStatus() == PurchaseStatus.CANCELLED) {
             throw new BusinessRuleViolationException(
@@ -161,7 +161,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public PurchaseResponse cancelPurchase(UUID id) {
-        Purchase purchase = findPurchaseOrThrow(id);
+        Purchase purchase = findPurchase(id);
 
         if (purchase.getStatus() != PurchaseStatus.PENDING) {
             throw new BusinessRuleViolationException(
@@ -173,17 +173,17 @@ public class PurchaseServiceImpl implements PurchaseService {
         return purchaseMapper.toResponse(purchase);
     }
 
-    private Purchase findPurchaseOrThrow(UUID id) {
+    private Purchase findPurchase(UUID id) {
         return purchaseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Purchase", id));
     }
 
-    private Supplier findSupplierOrThrow(UUID id) {
+    private Supplier findSupplier(UUID id) {
         return supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier", id));
     }
 
-    private Product findProductOrThrow(UUID id) {
+    private Product findProduct(UUID id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
     }
