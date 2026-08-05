@@ -44,13 +44,13 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public InventoryResponse getInventoryByProduct(UUID productId) {
-        return inventoryMapper.toResponse(findInventoryOrThrow(productId));
+        return inventoryMapper.toResponse(findInventory(productId));
     }
 
     @Override
     @Transactional
     public InventoryResponse adjustStock(UUID productId, AdjustInventoryRequest request) {
-        Inventory inventory = findInventoryOrThrow(productId);
+        Inventory inventory = findInventory(productId);
 
         int quantityBefore = inventory.getQuantityOnHand();
         int quantityAfter = quantityBefore + request.quantity();
@@ -72,6 +72,15 @@ public class InventoryServiceImpl implements InventoryService {
 
         domainEventPublisher.publish(new StockAdjustedEvent(productId, quantityBefore, quantityAfter, request.reason()));
 
+        if (request.quantity() < 0) {
+            domainEventPublisher.publish(new com.ekwe_hub.zeeshopserver.productInventory.event.StockReducedEvent(
+                    productId,
+                    Math.abs(request.quantity()),
+                    quantityAfter,
+                    request.reason()
+            ));
+        }
+
         if (quantityAfter <= inventory.getLowStockThreshold()) {
             domainEventPublisher.publish(new LowStockDetectedEvent(productId, quantityAfter, inventory.getLowStockThreshold()));
         }
@@ -89,7 +98,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional
     public InventoryResponse updateLowStockThreshold(UUID productId, SetLowStockThresholdRequest request) {
-        Inventory inventory = findInventoryOrThrow(productId);
+        Inventory inventory = findInventory(productId);
         inventory.setLowStockThreshold(request.threshold());
         inventory = inventoryRepository.save(inventory);
         return inventoryMapper.toResponse(inventory);
@@ -97,14 +106,14 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public PageResponse<InventoryAdjustmentResponse> getInventoryHistory(UUID productId, Pageable pageable) {
-        findInventoryOrThrow(productId);
+        findInventory(productId);
         Page<InventoryAdjustmentResponse> history = inventoryAdjustmentRepository
                 .findByProductId(productId, pageable)
                 .map(inventoryMapper::toAdjustmentResponse);
         return PageResponse.from(history);
     }
 
-    private Inventory findInventoryOrThrow(UUID productId) {
+    private Inventory findInventory(UUID productId) {
         return inventoryRepository.findByProductId(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory", productId));
     }

@@ -30,6 +30,9 @@ class ReceiptServiceImplTest {
     @Mock
     private SaleRepository saleRepository;
 
+    @Mock
+    private com.ekwe_hub.zeeshopserver.shared.domain.event.DomainEventPublisher domainEventPublisher;
+
     @InjectMocks
     private ReceiptServiceImpl receiptService;
 

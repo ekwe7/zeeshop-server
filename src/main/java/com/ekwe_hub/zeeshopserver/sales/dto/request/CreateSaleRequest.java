@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record CreateSaleRequest(
@@ -22,6 +23,9 @@ public record CreateSaleRequest(
         String customerEmail,
 
         java.time.LocalDate dueDate,
+
+        @jakarta.validation.constraints.DecimalMin(value = "0.0", message = "Discount amount cannot be negative")
+        BigDecimal discountAmount,
 
         @Size(max = 500, message = "Notes cannot exceed 500 characters")
         String notes,

@@ -45,7 +45,7 @@ public class UserService {
     }
 
     public UserResponse getUser(UUID id) {
-        return userMapper.toResponse(findUserOrThrow(id));
+        return userMapper.toResponse(findUser(id));
     }
 
     @Transactional
@@ -60,7 +60,7 @@ public class UserService {
         User user = userMapper.toEntity(
                 request,
                 passwordEncoder.encode(request.password()),
-                findRoleOrThrow(request.roleId())
+                findRole(request.roleId())
         );
 
         return userMapper.toResponse(userRepository.save(user));
@@ -68,7 +68,7 @@ public class UserService {
 
     @Transactional
     public UserResponse updateUser(UUID id, UpdateUserRequest request) {
-        User user = findUserOrThrow(id);
+        User user = findUser(id);
 
         if (userRepository.existsByUsernameAndIdNot(request.username(), id)) {
             throw new DuplicateResourceException("User", "username", request.username());
@@ -77,7 +77,7 @@ public class UserService {
             throw new DuplicateResourceException("User", "email", request.email());
         }
 
-        userMapper.updateEntity(request, findRoleOrThrow(request.roleId()), user);
+        userMapper.updateEntity(request, findRole(request.roleId()), user);
 
         if (request.password() != null && !request.password().isBlank()) {
             user.updatePassword(passwordEncoder.encode(request.password()));
@@ -88,26 +88,26 @@ public class UserService {
 
     @Transactional
     public void deleteUser(UUID id) {
-        userRepository.delete(findUserOrThrow(id));
+        userRepository.delete(findUser(id));
     }
 
     @Transactional
     public UserResponse activateUser(UUID id) {
-        User user = findUserOrThrow(id);
+        User user = findUser(id);
         user.activate();
         return userMapper.toResponse(userRepository.save(user));
     }
 
     @Transactional
     public UserResponse deactivateUser(UUID id) {
-        User user = findUserOrThrow(id);
+        User user = findUser(id);
         user.deactivate();
         return userMapper.toResponse(userRepository.save(user));
     }
 
     @Transactional
     public void changePassword(UUID id, ChangePasswordRequest request) {
-        User user = findUserOrThrow(id);
+        User user = findUser(id);
 
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
             throw new BusinessRuleViolationException("Current password is incorrect");
@@ -117,12 +117,12 @@ public class UserService {
         userRepository.save(user);
     }
 
-    private User findUserOrThrow(UUID id) {
+    private User findUser(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", id));
     }
 
-    private Role findRoleOrThrow(UUID roleId) {
+    private Role findRole(UUID roleId) {
         return roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
     }

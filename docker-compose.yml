@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: zeeshop-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: zeeshop
+      POSTGRES_USER: zeeshop_db
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zeeshop_db -d zeeshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  zeeshop-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ekwe/zeeshop-server:latest
+    container_name: zeeshop-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    env_file:
+      - .env.production
+    environment:
+      JDBC_DATABASE_URL: jdbc:postgresql://postgres:5432/zeeshop
+      JDBC_DATABASE_USERNAME: zeeshop_db
+      JDBC_DATABASE_PASSWORD: postgres
+      JDBC_DATABASE_DRIVER: org.postgresql.Driver
+      APP_ENV: local
+
+
+  
+
+volumes:
+  postgres_data:

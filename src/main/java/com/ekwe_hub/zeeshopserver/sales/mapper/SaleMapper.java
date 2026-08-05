@@ -24,6 +24,7 @@ public class SaleMapper {
                 .customerPhone(request.customerPhone())
                 .customerEmail(request.customerEmail())
                 .dueDate(request.dueDate())
+                .discountAmount(request.discountAmount() != null ? request.discountAmount() : BigDecimal.ZERO)
                 .notes(request.notes())
                 .build();
     }
@@ -56,6 +57,9 @@ public class SaleMapper {
         if (request.dueDate() != null) {
             sale.setDueDate(request.dueDate());
         }
+        if (request.discountAmount() != null) {
+            sale.setDiscountAmount(request.discountAmount());
+        }
         if (request.notes() != null) {
             sale.setNotes(request.notes());
         }
@@ -72,6 +76,8 @@ public class SaleMapper {
                 sale.getCustomerEmail(),
                 sale.getDueDate(),
                 sale.getNotes(),
+                sale.getSubtotalAmount(),
+                sale.getDiscountAmount(),
                 sale.getTotalAmount(),
                 sale.getItems().stream().map(this::toItemResponse).toList(),
                 sale.getCreatedAt(),

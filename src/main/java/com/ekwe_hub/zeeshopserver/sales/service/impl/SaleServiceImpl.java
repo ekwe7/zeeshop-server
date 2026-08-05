@@ -42,15 +42,15 @@ public class SaleServiceImpl implements SaleService {
     private final DomainEventPublisher domainEventPublisher;
 
     @Override
-    public PageResponse<SaleResponse> getAllSales(SaleStatus status, PaymentType paymentType, Pageable pageable) {
-        Page<SaleResponse> responses = saleRepository.search(status, paymentType, pageable)
+    public PageResponse<SaleResponse> getAllSales(SaleStatus status, PaymentType paymentType, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, Pageable pageable) {
+        Page<SaleResponse> responses = saleRepository.search(status, paymentType, startDate, endDate, pageable)
                 .map(saleMapper::toResponse);
         return PageResponse.from(responses);
     }
 
     @Override
     public SaleResponse getSale(UUID id) {
-        return saleMapper.toResponse(findSaleOrThrow(id));
+        return saleMapper.toResponse(findSale(id));
     }
 
     @Override
@@ -66,18 +66,25 @@ public class SaleServiceImpl implements SaleService {
 
         Sale sale = saleMapper.toEntity(request);
 
-        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal subtotal = BigDecimal.ZERO;
         for (SaleItemRequest itemRequest : request.items()) {
-            Product product = findProductOrThrow(itemRequest.productId());
+            Product product = findProduct(itemRequest.productId());
             SaleItem item = saleMapper.toItemEntity(itemRequest, product, sale);
             sale.getItems().add(item);
-            totalAmount = totalAmount.add(itemRequest.unitPrice().multiply(BigDecimal.valueOf(itemRequest.quantity())));
+            subtotal = subtotal.add(itemRequest.unitPrice().multiply(BigDecimal.valueOf(itemRequest.quantity())));
         }
-        sale.setTotalAmount(totalAmount);
+        sale.setSubtotalAmount(subtotal);
+
+        BigDecimal discount = sale.getDiscountAmount() != null ? sale.getDiscountAmount() : BigDecimal.ZERO;
+        BigDecimal netTotal = subtotal.subtract(discount);
+        if (netTotal.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessRuleViolationException("Total amount after discount cannot be negative");
+        }
+        sale.setTotalAmount(netTotal);
 
         sale = saleRepository.save(sale);
 
-        domainEventPublisher.publish(new SaleCreatedEvent(sale.getId(), totalAmount));
+        domainEventPublisher.publish(new SaleCreatedEvent(sale.getId(), netTotal));
 
         return saleMapper.toResponse(sale);
     }
@@ -85,7 +92,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public SaleResponse updateSale(UUID id, UpdateSaleRequest request) {
-        Sale sale = findSaleOrThrow(id);
+        Sale sale = findSale(id);
 
         if (sale.getStatus() != SaleStatus.PENDING) {
             throw new BusinessRuleViolationException(
@@ -93,6 +100,15 @@ public class SaleServiceImpl implements SaleService {
         }
 
         saleMapper.updateEntity(request, sale);
+
+        // Recalculate net total
+        BigDecimal discount = sale.getDiscountAmount() != null ? sale.getDiscountAmount() : BigDecimal.ZERO;
+        BigDecimal netTotal = sale.getSubtotalAmount().subtract(discount);
+        if (netTotal.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessRuleViolationException("Total amount after discount cannot be negative");
+        }
+        sale.setTotalAmount(netTotal);
+
         sale = saleRepository.save(sale);
         return saleMapper.toResponse(sale);
     }
@@ -100,7 +116,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public void deleteSale(UUID id) {
-        Sale sale = findSaleOrThrow(id);
+        Sale sale = findSale(id);
 
         if (sale.getStatus() == SaleStatus.COMPLETED) {
             throw new BusinessRuleViolationException("Cannot delete a completed sale");
@@ -112,7 +128,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public SaleResponse completeSale(UUID id) {
-        Sale sale = findSaleOrThrow(id);
+        Sale sale = findSale(id);
 
         if (sale.getStatus() != SaleStatus.PENDING) {
             throw new BusinessRuleViolationException(
@@ -141,7 +157,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public SaleResponse cancelSale(UUID id) {
-        Sale sale = findSaleOrThrow(id);
+        Sale sale = findSale(id);
 
         if (sale.getStatus() != SaleStatus.PENDING) {
             throw new BusinessRuleViolationException(
@@ -153,12 +169,12 @@ public class SaleServiceImpl implements SaleService {
         return saleMapper.toResponse(sale);
     }
 
-    private Sale findSaleOrThrow(UUID id) {
+    private Sale findSale(UUID id) {
         return saleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale", id));
     }
 
-    private Product findProductOrThrow(UUID id) {
+    private Product findProduct(UUID id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
     }

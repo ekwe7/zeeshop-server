@@ -40,7 +40,7 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public SupplierResponse getSupplier(UUID id) {
-        return supplierMapper.toResponse(findSupplierOrThrow(id));
+        return supplierMapper.toResponse(findSupplier(id));
     }
 
     @Override
@@ -61,7 +61,7 @@ public class SupplierServiceImpl implements SupplierService {
     @Override
     @Transactional
     public SupplierResponse updateSupplier(UUID id, UpdateSupplierRequest request) {
-        Supplier supplier = findSupplierOrThrow(id);
+        Supplier supplier = findSupplier(id);
 
         if (supplierRepository.existsByNameAndIdNot(request.name(), id)) {
             throw new DuplicateResourceException("Supplier", "name", request.name());
@@ -75,7 +75,7 @@ public class SupplierServiceImpl implements SupplierService {
     @Override
     @Transactional
     public void deleteSupplier(UUID id) {
-        Supplier supplier = findSupplierOrThrow(id);
+        Supplier supplier = findSupplier(id);
 
         if (purchaseRepository.existsBySupplierId(id)) {
             throw new BusinessRuleViolationException(
@@ -87,10 +87,10 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public BigDecimal getBalance(UUID id) {
-        return findSupplierOrThrow(id).getBalance();
+        return findSupplier(id).getBalance();
     }
 
-    private Supplier findSupplierOrThrow(UUID id) {
+    private Supplier findSupplier(UUID id) {
         return supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier", id));
     }

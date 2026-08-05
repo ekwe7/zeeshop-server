@@ -42,8 +42,10 @@ public class SaleController {
     public ResponseEntity<ApiResponse<PageResponse<SaleResponse>>> getAllSales(
             @RequestParam(required = false) SaleStatus status,
             @RequestParam(required = false) PaymentType paymentType,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endDate,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(saleService.getAllSales(status, paymentType, pageable)));
+        return ResponseEntity.ok(ApiResponse.success(saleService.getAllSales(status, paymentType, startDate, endDate, pageable)));
     }
 
     @GetMapping("/{id}")

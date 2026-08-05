@@ -37,7 +37,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse getCategory(UUID id) {
-        return categoryMapper.toResponse(findCategoryOrThrow(id));
+        return categoryMapper.toResponse(findCategory(id));
     }
 
     @Override
@@ -55,7 +55,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse updateCategory(UUID id, UpdateCategoryRequest request) {
-        Category category = findCategoryOrThrow(id);
+        Category category = findCategory(id);
 
         if (categoryRepository.existsByNameAndIdNot(request.name(), id)) {
             throw new DuplicateResourceException("Category", "name", request.name());
@@ -69,7 +69,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public void deleteCategory(UUID id) {
-        Category category = findCategoryOrThrow(id);
+        Category category = findCategory(id);
 
         if (productRepository.existsByCategoryId(id)) {
             throw new BusinessRuleViolationException(
@@ -79,7 +79,7 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.delete(category);
     }
 
-    private Category findCategoryOrThrow(UUID id) {
+    private Category findCategory(UUID id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id));
     }

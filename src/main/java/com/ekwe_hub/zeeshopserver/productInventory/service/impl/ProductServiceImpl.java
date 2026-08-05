@@ -51,7 +51,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getProduct(UUID id) {
-        Product product = findProductOrThrow(id);
+        Product product = findProduct(id);
         return productMapper.toResponse(product, inventoryRepository.findByProductId(id).orElse(null));
     }
 
@@ -64,8 +64,8 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = productMapper.toEntity(
                 request,
-                findCategoryOrThrow(request.categoryId()),
-                findUnitOrThrow(request.unitId())
+                findCategory(request.categoryId()),
+                findUnit(request.unitId())
         );
         product = productRepository.save(product);
 
@@ -84,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductResponse updateProduct(UUID id, UpdateProductRequest request) {
-        Product product = findProductOrThrow(id);
+        Product product = findProduct(id);
 
         if (productRepository.existsBySkuAndIdNot(request.sku(), id)) {
             throw new DuplicateResourceException("Product", "sku", request.sku());
@@ -92,8 +92,8 @@ public class ProductServiceImpl implements ProductService {
 
         productMapper.updateEntity(
                 request,
-                findCategoryOrThrow(request.categoryId()),
-                findUnitOrThrow(request.unitId()),
+                findCategory(request.categoryId()),
+                findUnit(request.unitId()),
                 product
         );
 
@@ -107,29 +107,29 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteProduct(UUID id) {
-        Product product = findProductOrThrow(id);
+        Product product = findProduct(id);
         inventoryRepository.findByProductId(id).ifPresent(inventoryRepository::delete);
         productRepository.delete(product);
 
         domainEventPublisher.publish(new ProductDeletedEvent(product.getId(), product.getSku()));
     }
 
-    private Product findProductOrThrow(UUID id) {
+    private Product findProduct(UUID id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
     }
 
-    private Category findCategoryOrThrow(UUID id) {
+    private Category findCategory(UUID id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id));
     }
 
-    private Unit findUnitOrThrow(UUID id) {
+    private Unit findUnit(UUID id) {
         return unitRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Unit", id));
     }
 
-    private Inventory findInventoryOrThrow(UUID productId) {
+    private Inventory findInventory(UUID productId) {
         return inventoryRepository.findByProductId(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory", productId));
     }
