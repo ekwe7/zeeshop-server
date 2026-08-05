@@ -21,7 +21,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      image: ekwe/zeeshop-server:latest
+    image: ekwe/zeeshop-server:latest
     container_name: zeeshop-server
     restart: unless-stopped
     depends_on:

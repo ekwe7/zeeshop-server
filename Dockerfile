@@ -9,7 +9,8 @@ COPY . .
 
 RUN chmod +x gradlew
 
-RUN ./gradlew clean bootJar --no-daemon
+# Build the executable Spring Boot JAR skipping tests during image build
+RUN ./gradlew bootJar --no-daemon -x test
 
 # -----------------------------
 # Stage 2: Runtime

@@ -1,6 +1,5 @@
 .git
 .gradle
-build
 .idea
 .vscode
 *.iml
@@ -8,3 +7,4 @@ build
 Dockerfile
 docker-compose.yml
 README.md
+
