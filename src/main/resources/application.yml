@@ -13,7 +13,7 @@ spring:
     name: zeeshop-server
 
   datasource:
-    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/zeeshop}
+    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/zeeshop}}}
     username: ${JDBC_DATABASE_USERNAME:zeeshop_user}
     password: ${JDBC_DATABASE_PASSWORD:zeeshop_password}
     driver-class-name: ${JDBC_DATABASE_DRIVER:org.postgresql.Driver}
@@ -26,7 +26,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           time_zone: UTC
 
@@ -36,7 +35,7 @@ spring:
     default-property-inclusion: non_null
 
 server:
-  port: ${SERVER_PORT:8083}
+  port: ${PORT:${SERVER_PORT:8083}}
   error:
     include-message: always
     include-binding-errors: always
