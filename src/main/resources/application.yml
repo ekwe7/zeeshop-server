@@ -13,7 +13,7 @@ spring:
     name: zeeshop-server
 
   datasource:
-    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/zeeshop}
+    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/zeeshop}}}
     username: ${JDBC_DATABASE_USERNAME:zeeshop_user}
     password: ${JDBC_DATABASE_PASSWORD:zeeshop_password}
     driver-class-name: ${JDBC_DATABASE_DRIVER:org.postgresql.Driver}
