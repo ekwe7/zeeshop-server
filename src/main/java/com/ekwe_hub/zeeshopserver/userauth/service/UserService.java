@@ -6,6 +6,7 @@ import com.ekwe_hub.zeeshopserver.shared.api.exception.ResourceNotFoundException
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.ChangePasswordRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.CreateUserRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.UpdateUserRequest;
+import com.ekwe_hub.zeeshopserver.userauth.dto.response.RoleResponse;
 import com.ekwe_hub.zeeshopserver.userauth.dto.response.UserResponse;
 import com.ekwe_hub.zeeshopserver.userauth.entity.Role;
 import com.ekwe_hub.zeeshopserver.userauth.entity.User;
@@ -41,6 +42,16 @@ public class UserService {
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(userMapper::toResponse)
+                .toList();
+    }
+
+    public List<RoleResponse> getAllRoles() {
+        return roleRepository.findAll().stream()
+                .map(role -> RoleResponse.builder()
+                        .id(role.getId())
+                        .name(role.getName())
+                        .permissions(role.getPermissions())
+                        .build())
                 .toList();
     }
 
