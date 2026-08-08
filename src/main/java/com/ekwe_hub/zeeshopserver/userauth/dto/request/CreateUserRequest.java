@@ -21,8 +21,8 @@ public record CreateUserRequest(
         @Size(min = 8, message = "Password must be at least 8 characters")
         String password,
 
-        @NotNull(message = "Role is required")
-        UUID roleId,
+        @NotBlank(message = "Role is required")
+        String roleId,
 
         // Defaults to true when omitted
         Boolean enabled
