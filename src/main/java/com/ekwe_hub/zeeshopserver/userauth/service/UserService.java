@@ -57,10 +57,13 @@ public class UserService {
             throw new DuplicateResourceException("User", "email", request.email());
         }
 
+        Role role = findRole(request.roleId());
+        validateAssignableRole(role);
+
         User user = userMapper.toEntity(
                 request,
                 passwordEncoder.encode(request.password()),
-                findRole(request.roleId())
+                role
         );
 
         return userMapper.toResponse(userRepository.save(user));
@@ -77,7 +80,9 @@ public class UserService {
             throw new DuplicateResourceException("User", "email", request.email());
         }
 
-        userMapper.updateEntity(request, findRole(request.roleId()), user);
+        Role role = findRole(request.roleId());
+        validateAssignableRole(role);
+        userMapper.updateEntity(request, role, user);
 
         if (request.password() != null && !request.password().isBlank()) {
             user.updatePassword(passwordEncoder.encode(request.password()));
@@ -130,6 +135,12 @@ public class UserService {
         } catch (IllegalArgumentException e) {
             return roleRepository.findByName(roleIdentifier.toUpperCase())
                     .orElseThrow(() -> new ResourceNotFoundException("Role not found with name: " + roleIdentifier));
+        }
+    }
+
+    private void validateAssignableRole(Role role) {
+        if (!"MANAGER".equalsIgnoreCase(role.getName()) && !"CASHIER".equalsIgnoreCase(role.getName())) {
+            throw new BusinessRuleViolationException("System Admin can only assign MANAGER or CASHIER roles");
         }
     }
 }

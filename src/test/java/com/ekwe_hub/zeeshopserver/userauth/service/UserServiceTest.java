@@ -69,7 +69,7 @@ class UserServiceTest {
         userId = UUID.randomUUID();
         roleId = UUID.randomUUID();
 
-        role = Role.builder().name("STAFF").build();
+        role = Role.builder().name("MANAGER").build();
         role.setId(roleId);
 
         user = User.builder()
@@ -85,7 +85,7 @@ class UserServiceTest {
                 .id(userId)
                 .username("jdoe")
                 .email("jdoe@example.com")
-                .roleName("STAFF")
+                .roleName("MANAGER")
                 .enabled(true)
                 .build();
     }
@@ -361,6 +361,23 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.changePassword(userId, request))
                 .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void createUser_throwsBusinessRuleViolation_whenRoleIsNotManagerOrCashier() {
+        Role adminRole = Role.builder().name("ADMIN").build();
+        adminRole.setId(roleId);
+        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId.toString(), true);
+
+        when(userRepository.existsByUsername("jdoe")).thenReturn(false);
+        when(userRepository.existsByEmail("jdoe@example.com")).thenReturn(false);
+        when(roleRepository.findById(roleId)).thenReturn(Optional.of(adminRole));
+
+        assertThatThrownBy(() -> userService.createUser(request))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .hasMessageContaining("System Admin can only assign MANAGER or CASHIER roles");
 
         verify(userRepository, never()).save(any());
     }
