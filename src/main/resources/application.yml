@@ -27,6 +27,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    out-of-order: true
     properties:
       hibernate:
         format_sql: true
