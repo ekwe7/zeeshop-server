@@ -5,11 +5,18 @@ FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
-COPY . .
+# Copy gradle wrapper files first to leverage Docker layer caching
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle settings.gradle .
 
 RUN chmod +x gradlew
 
-# Build the executable Spring Boot JAR skipping tests during image build
+# Download Gradle distribution
+RUN ./gradlew --version --no-daemon
+
+# Copy source code and build executable Spring Boot JAR skipping tests
+COPY src src
 RUN ./gradlew bootJar --no-daemon -x test
 
 # -----------------------------
@@ -24,5 +31,3 @@ COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 10000
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
-
-
