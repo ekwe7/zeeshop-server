@@ -8,6 +8,7 @@ import com.ekwe_hub.zeeshopserver.userauth.dto.request.CreateUserRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.request.UpdateUserRequest;
 import com.ekwe_hub.zeeshopserver.userauth.dto.response.RoleResponse;
 import com.ekwe_hub.zeeshopserver.userauth.dto.response.UserResponse;
+import com.ekwe_hub.zeeshopserver.userauth.entity.Permission;
 import com.ekwe_hub.zeeshopserver.userauth.entity.Role;
 import com.ekwe_hub.zeeshopserver.userauth.entity.User;
 import com.ekwe_hub.zeeshopserver.userauth.mapper.UserMapper;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -139,14 +141,41 @@ public class UserService {
     }
 
     private Role findRole(String roleIdentifier) {
+        String normalizedRoleName = roleIdentifier.trim().toUpperCase();
         try {
             UUID roleId = UUID.fromString(roleIdentifier);
             return roleRepository.findById(roleId)
                     .orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
         } catch (IllegalArgumentException e) {
-            return roleRepository.findByName(roleIdentifier.toUpperCase())
-                    .orElseThrow(() -> new ResourceNotFoundException("Role not found with name: " + roleIdentifier));
+            return roleRepository.findByName(normalizedRoleName)
+                    .orElseGet(() -> {
+                        if ("MANAGER".equals(normalizedRoleName) || "CASHIER".equals(normalizedRoleName)) {
+                            return roleRepository.save(Role.builder()
+                                    .name(normalizedRoleName)
+                                    .permissions(getPermissionsForRole(normalizedRoleName))
+                                    .build());
+                        }
+                        throw new ResourceNotFoundException("Role not found with name: " + roleIdentifier);
+                    });
         }
+    }
+
+    private Set<Permission> getPermissionsForRole(String roleName) {
+        if ("MANAGER".equals(roleName)) {
+            return Set.of(
+                    Permission.USER_READ,
+                    Permission.SALES_READ, Permission.SALES_WRITE,
+                    Permission.INVENTORY_READ, Permission.INVENTORY_WRITE,
+                    Permission.SUPPLIER_READ, Permission.SUPPLIER_WRITE,
+                    Permission.CUSTOMER_DEBT_READ, Permission.CUSTOMER_DEBT_WRITE,
+                    Permission.EXPENSE_READ, Permission.EXPENSE_WRITE
+            );
+        }
+        return Set.of(
+                Permission.SALES_READ, Permission.SALES_WRITE,
+                Permission.INVENTORY_READ,
+                Permission.CUSTOMER_DEBT_READ, Permission.CUSTOMER_DEBT_WRITE
+        );
     }
 
     private void validateAssignableRole(Role role) {

@@ -44,25 +44,43 @@ public class AdminUserSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        if (userRepository.count() > 0) {
-            return;
+        // Ensure default roles exist in the database regardless of Flyway state
+        Role adminRole = getOrCreateRole("ADMIN", Set.of(Permission.values()));
+        getOrCreateRole("MANAGER", Set.of(
+                Permission.USER_READ,
+                Permission.SALES_READ, Permission.SALES_WRITE,
+                Permission.INVENTORY_READ, Permission.INVENTORY_WRITE,
+                Permission.SUPPLIER_READ, Permission.SUPPLIER_WRITE,
+                Permission.CUSTOMER_DEBT_READ, Permission.CUSTOMER_DEBT_WRITE,
+                Permission.EXPENSE_READ, Permission.EXPENSE_WRITE
+        ));
+        getOrCreateRole("CASHIER", Set.of(
+                Permission.SALES_READ, Permission.SALES_WRITE,
+                Permission.INVENTORY_READ,
+                Permission.CUSTOMER_DEBT_READ, Permission.CUSTOMER_DEBT_WRITE
+        ));
+
+        if (userRepository.count() == 0) {
+            User admin = User.builder()
+                    .username(adminUsername)
+                    .email(adminEmail)
+                    .password(passwordEncoder.encode(adminPassword))
+                    .role(adminRole)
+                    .enabled(true)
+                    .build();
+            userRepository.save(admin);
+            log.info("Seeded default admin user '{}'", adminUsername);
         }
+    }
 
-        Role adminRole = roleRepository.findByName("ADMIN")
-                .orElseGet(() -> roleRepository.save(Role.builder()
-                        .name("ADMIN")
-                        .permissions(Set.of(Permission.values()))
-                        .build()));
-
-        User admin = User.builder()
-                .username(adminUsername)
-                .email(adminEmail)
-                .password(passwordEncoder.encode(adminPassword))
-                .role(adminRole)
-                .enabled(true)
-                .build();
-        userRepository.save(admin);
-
-        log.info("Seeded default admin user '{}' — change its password immediately in non-local environments", adminUsername);
+    private Role getOrCreateRole(String roleName, Set<Permission> permissions) {
+        return roleRepository.findByName(roleName)
+                .orElseGet(() -> {
+                    log.info("Role '{}' not found in DB. Auto-seeding role...", roleName);
+                    return roleRepository.save(Role.builder()
+                            .name(roleName)
+                            .permissions(permissions)
+                            .build());
+                });
     }
 }
