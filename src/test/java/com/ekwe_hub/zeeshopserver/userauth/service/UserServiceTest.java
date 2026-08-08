@@ -120,7 +120,7 @@ class UserServiceTest {
 
     @Test
     void createUser_resolvesRoleAndEncodesPassword_beforeDelegatingToMapper() {
-        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId, true);
+        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId.toString(), true);
 
         when(userRepository.existsByUsername("jdoe")).thenReturn(false);
         when(userRepository.existsByEmail("jdoe@example.com")).thenReturn(false);
@@ -139,7 +139,7 @@ class UserServiceTest {
 
     @Test
     void createUser_throwsDuplicateResource_whenUsernameTaken() {
-        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId, true);
+        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId.toString(), true);
         when(userRepository.existsByUsername("jdoe")).thenReturn(true);
 
         assertThatThrownBy(() -> userService.createUser(request))
@@ -150,7 +150,7 @@ class UserServiceTest {
 
     @Test
     void createUser_throwsDuplicateResource_whenEmailTaken() {
-        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId, true);
+        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId.toString(), true);
         when(userRepository.existsByUsername("jdoe")).thenReturn(false);
         when(userRepository.existsByEmail("jdoe@example.com")).thenReturn(true);
 
@@ -162,7 +162,7 @@ class UserServiceTest {
 
     @Test
     void createUser_throwsResourceNotFound_whenRoleMissing() {
-        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId, true);
+        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId.toString(), true);
         when(userRepository.existsByUsername("jdoe")).thenReturn(false);
         when(userRepository.existsByEmail("jdoe@example.com")).thenReturn(false);
         when(roleRepository.findById(roleId)).thenReturn(Optional.empty());
@@ -175,7 +175,7 @@ class UserServiceTest {
 
     @Test
     void updateUser_delegatesFieldAssignmentToMapper_andRehashesPassword_whenSupplied() {
-        UpdateUserRequest request = new UpdateUserRequest("jdoe2", "jdoe2@example.com", "new-password", roleId, false);
+        UpdateUserRequest request = new UpdateUserRequest("jdoe2", "jdoe2@example.com", "new-password", roleId.toString(), false);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.existsByUsernameAndIdNot("jdoe2", userId)).thenReturn(false);
@@ -194,7 +194,7 @@ class UserServiceTest {
 
     @Test
     void updateUser_keepsExistingPassword_whenPasswordOmitted() {
-        UpdateUserRequest request = new UpdateUserRequest("jdoe", "jdoe@example.com", null, roleId, true);
+        UpdateUserRequest request = new UpdateUserRequest("jdoe", "jdoe@example.com", null, roleId.toString(), true);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.existsByUsernameAndIdNot("jdoe", userId)).thenReturn(false);
@@ -211,7 +211,7 @@ class UserServiceTest {
 
     @Test
     void updateUser_throwsResourceNotFound_whenUserMissing() {
-        UpdateUserRequest request = new UpdateUserRequest("jdoe", "jdoe@example.com", null, roleId, true);
+        UpdateUserRequest request = new UpdateUserRequest("jdoe", "jdoe@example.com", null, roleId.toString(), true);
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.updateUser(userId, request))
@@ -220,7 +220,7 @@ class UserServiceTest {
 
     @Test
     void updateUser_throwsDuplicateResource_whenUsernameTakenBySomeoneElse() {
-        UpdateUserRequest request = new UpdateUserRequest("taken", "jdoe@example.com", null, roleId, true);
+        UpdateUserRequest request = new UpdateUserRequest("taken", "jdoe@example.com", null, roleId.toString(), true);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.existsByUsernameAndIdNot("taken", userId)).thenReturn(true);
 
@@ -232,7 +232,7 @@ class UserServiceTest {
 
     @Test
     void updateUser_throwsDuplicateResource_whenEmailTakenBySomeoneElse() {
-        UpdateUserRequest request = new UpdateUserRequest("jdoe", "taken@example.com", null, roleId, true);
+        UpdateUserRequest request = new UpdateUserRequest("jdoe", "taken@example.com", null, roleId.toString(), true);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.existsByUsernameAndIdNot("jdoe", userId)).thenReturn(false);
         when(userRepository.existsByEmailAndIdNot("taken@example.com", userId)).thenReturn(true);
@@ -246,7 +246,7 @@ class UserServiceTest {
     @Test
     void updateUser_throwsResourceNotFound_whenRoleMissing() {
         UUID missingRoleId = UUID.randomUUID();
-        UpdateUserRequest request = new UpdateUserRequest("jdoe", "jdoe@example.com", null, missingRoleId, true);
+        UpdateUserRequest request = new UpdateUserRequest("jdoe", "jdoe@example.com", null, missingRoleId.toString(), true);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.existsByUsernameAndIdNot("jdoe", userId)).thenReturn(false);

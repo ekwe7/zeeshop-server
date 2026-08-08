@@ -16,23 +16,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Wires Spring Security for a stateless, JWT-only API.
- *
- * - CSRF is disabled: CSRF exists to protect cookie-based sessions from
- *   forged browser requests, but this API carries no session cookie — the
- *   client sends the JWT explicitly in the Authorization header, which a
- *   third-party site cannot forge.
- * - Session creation policy is STATELESS: every request must carry its own
- *   token; Spring never creates an HttpSession.
- * - JwtAuthenticationFilter runs before the standard username/password
- *   filter since this API has no form login.
- * - JwtAuthenticationEntryPoint handles unauthenticated requests to a
- *   protected endpoint. Without it Spring falls back to
- *   Http403ForbiddenEntryPoint (neither httpBasic() nor formLogin() is
- *   configured to supply one), returning 403 for a missing/invalid token
- *   instead of 401.
  */
 @Configuration
 @EnableWebSecurity
@@ -43,6 +35,18 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @Value("${cors.allowed-origins}")
+    private String[] allowedOrigins;
+
+    @Value("${cors.allowed-methods}")
+    private String[] allowedMethods;
+
+    @Value("${cors.allowed-headers}")
+    private String[] allowedHeaders;
+
+    @Value("${cors.max-age}")
+    private long maxAge;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -58,9 +62,23 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
+        configuration.setAllowedMethods(Arrays.asList(allowedMethods));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(maxAge);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(Customizer.withDefaults())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(jwtAuthenticationEntryPoint))

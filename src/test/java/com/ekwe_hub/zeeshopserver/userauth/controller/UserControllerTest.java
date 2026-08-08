@@ -94,7 +94,7 @@ class UserControllerTest {
 
     @Test
     void createUser_returnsCreatedWithServiceResult() {
-        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId, true);
+        CreateUserRequest request = new CreateUserRequest("jdoe", "jdoe@example.com", "plain-password", roleId.toString(), true);
         when(userService.createUser(request)).thenReturn(userResponse);
 
         ResponseEntity<ApiResponse<UserResponse>> response = userController.createUser(request);
@@ -107,7 +107,7 @@ class UserControllerTest {
 
     @Test
     void updateUser_returnsOkWithServiceResult() {
-        UpdateUserRequest request = new UpdateUserRequest("jdoe", "jdoe@example.com", null, roleId, true);
+        UpdateUserRequest request = new UpdateUserRequest("jdoe", "jdoe@example.com", null, roleId.toString(), true);
         when(userService.updateUser(userId, request)).thenReturn(userResponse);
 
         ResponseEntity<ApiResponse<UserResponse>> response = userController.updateUser(userId, request);

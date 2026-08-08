@@ -122,8 +122,14 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", id));
     }
 
-    private Role findRole(UUID roleId) {
-        return roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
+    private Role findRole(String roleIdentifier) {
+        try {
+            UUID roleId = UUID.fromString(roleIdentifier);
+            return roleRepository.findById(roleId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
+        } catch (IllegalArgumentException e) {
+            return roleRepository.findByName(roleIdentifier.toUpperCase())
+                    .orElseThrow(() -> new ResourceNotFoundException("Role not found with name: " + roleIdentifier));
+        }
     }
 }
