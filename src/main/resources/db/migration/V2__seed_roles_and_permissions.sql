@@ -3,15 +3,15 @@
 
 -- 1. Ensure roles exist in case they are missing
 INSERT INTO roles (id, name, created_at, updated_at, created_by, updated_by)
-SELECT gen_random_uuid(), 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'
+SELECT random_uuid(), 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'
 WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'ADMIN');
 
 INSERT INTO roles (id, name, created_at, updated_at, created_by, updated_by)
-SELECT gen_random_uuid(), 'MANAGER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'
+SELECT random_uuid(), 'MANAGER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'
 WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'MANAGER');
 
 INSERT INTO roles (id, name, created_at, updated_at, created_by, updated_by)
-SELECT gen_random_uuid(), 'CASHIER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'
+SELECT random_uuid(), 'CASHIER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'
 WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'CASHIER');
 
 -- 2. Seed ADMIN permissions dynamically using roles.id lookup
